@@ -107,16 +107,24 @@ $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).fastq: $(INPUT_FILE_PATH)
 	$(COMMAND_CONVERT_INPUT) 
 	@echo -e "$(timestamp) $(PIPELINE_NAME): Converted INPUT_FILE: $(INPUT_FILE_NAME) to $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).fastq\n" >> $(LOG_FILE)
 
+##
+## Guess meanread length
+##
+update_read_lenth: $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).fastq
+	@echo -e "======================\n" >> $(LOG_FILE)
+	@echo -e "$(timestamp) $(PIPELINE_NAME): Guessing read legth based on fastq sequences:\n" >> $(LOG_FILE)
+	$(eval MEAN_READ_LEN := $(shell cat $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).fastq | head -n 40000 | awk '{if((NR+2)%4==0) {count++; sum+=length($$_)}} END{print sum/count}'))
+	@echo -e "$(timestamp) $(PIPELINE_NAME): Finished guessing read legth based on fastq sequences:\n" >> $(OUTPUT_DIR)/$(SAMPLE_ID).log
 
 ##
 ## Guess Fastq quality encoding
 ##
-$(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).qualityEncoding: $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).fastq
+$(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).qualityEncoding: $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).fastq update_read_lenth $(LIBRARY_PATH)/L1/$(NUMBER_OF_READS)_$(MEAN_READ_LEN)_$(ERROR_RATE).txt
 	@echo -e "======================\n" >> $(LOG_FILE)
 	@echo -e "$(timestamp) $(PIPELINE_NAME): Guessing encoding of fastq read-qualities:\n" >> $(LOG_FILE)
 	@echo -e "$(timestamp) $(PIPELINE_NAME): cat $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).fastq | head -n 40000 | awk '{if(NR%4==0) printf("%s",$$0);}' | od -A n -t u1 | awk 'BEGIN{min=100;max=0;}{for(i=1;i<=NF;i++) {if($$i>max) max=$$i; if($$i<min) min=$$i;}}END{if(max<=74 && min<59) print "33"; else if(max>73 && min>=64) print "64"; else if(min>=59 && min<64 && max>73) print "64"; else print "64";}' > $@\n" >> $(LOG_FILE)
 	cat $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).fastq | head -n 40000 | awk '{if(NR%4==0) printf("%s",$$0);}' | od -A n -t u1 | awk 'BEGIN{min=100;max=0;}{for(i=1;i<=NF;i++) {if($$i>max) max=$$i; if($$i<min) min=$$i;}}END{if(max<=74 && min<59) print "33"; else if(max>73 && min>=64) print "64"; else if(min>=59 && min<64 && max>73) print "64"; else print "64";}' > $@
-	$(eval MEAN_READ_LEN := $(shell cat $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).fastq | head -n 40000 | awk '{if((NR+2)%4==0) {count++; sum+=length($$_)}} END{print sum/count}'))
+#	$(eval MEAN_READ_LEN := $(shell cat $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).fastq | head -n 40000 | awk '{if((NR+2)%4==0) {count++; sum+=length($$_)}} END{print sum/count}'))
 	@echo -e "$(timestamp) $(PIPELINE_NAME): Finished guessing encoding of fastq read-qualities:\n" >> $(OUTPUT_DIR)/$(SAMPLE_ID).log
 
 
@@ -143,7 +151,7 @@ $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).sorted.bam: $(OUTPUT_DIR)/$(SAMPLE_ID)/$
 	$(COMMAND_MAP) 
 	@echo -e "$(timestamp) $(PIPELINE_NAME): Indexing bam file:\n" >> $(LOG_FILE)
 	$(SAMTOOLS_BIN) index $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).sorted.bam
-	@echo -e "$(timestamp) $(PIPELINE_NAME): Counting mapped reads file:\n" >> $(LOG_FILE)
+	@echo -e "$(timestamp) $(PIPELINE_NAME): Counting total number of mapped reads:\n" >> $(LOG_FILE)
 	samtools idxstats $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).sorted.bam | awk '{sum+=$$3} END{print sum}' > $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).sorted.bam.tot
 
 
@@ -163,7 +171,7 @@ $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).re.filtered.bed: $(OUTPUT_DIR)/$(SAMPLE_
 ##
 ## SIMULATE reads from L1 if they do not exists
 ##
-$(LIBRARY_PATH)/L1/$(MEAN_READ_LEN).counts.txt: 
+$(LIBRARY_PATH)/L1/$(NUMBER_OF_READS)_$(MEAN_READ_LEN)_$(ERROR_RATE).txt: 
 	@echo -e "======================\n" >> $(LOG_FILE)
 	@echo -e "$(timestamp) $(PIPELINE_NAME): The profile for this study was not found at: $(LIBRARY_PATH)/L1/$(MEAN_READ_LEN).counts.txt\n" >> $(LOG_FILE)
 	@echo -e "$(timestamp) $(PIPELINE_NAME): Simulating reads with length equal to $(MEAN_READ_LEN)\n" >> $(LOG_FILE)
@@ -183,22 +191,27 @@ $(LIBRARY_PATH)/L1/$(MEAN_READ_LEN).counts.txt:
 		cat $(LIBRARY_PATH)/L1/simu/$(NUMBER_OF_READS)_$(MEAN_READ_LEN)_$(ERROR_RATE)_$$iter.sorted.bam.L1.bed | awk '{print $$(NF-1)}' | sort | uniq -c > $(LIBRARY_PATH)/L1/simu/$(NUMBER_OF_READS)_$(MEAN_READ_LEN)_$(ERROR_RATE)_$$iter.sorted.bam.L1.bed.count; \
 	done
 	@echo -e "$(timestamp) $(PIPELINE_NAME): Calculating the expected number of reads on each subfamily:\n" >> $(LOG_FILE)
-	cat $(LIBRARY_PATH)/L1/simu/$(NUMBER_OF_READS)_$(MEAN_READ_LEN)_$(ERROR_RATE)_*.sorted.bam.L1.bed.count | sort -k2,2 | sed 's/^[ ]*//g' | awk 'BEGIN{first=1} {if ( first == 1 ) {id=$$2;first=0}; if ( id != $$2 ) {print sum/count,id;id=$$2;sum=0;count=0}; sum+=$$1;count++}; END{print sum/count,id;}' > $(LIBRARY_PATH)/L1/$(MEAN_READ_LEN).counts.txt
+	cat $(LIBRARY_PATH)/L1/simu/$(NUMBER_OF_READS)_$(MEAN_READ_LEN)_$(ERROR_RATE)_*.sorted.bam.L1.bed.count | sort -k2,2 | sed 's/^[ ]*//g' | awk 'BEGIN{first=1} {if ( first == 1 ) {id=$$2;first=0}; if ( id != $$2 ) {print sum/count,id;id=$$2;sum=0;count=0}; sum+=$$1;count++}; END{print sum/count,id;}' > $(LIBRARY_PATH)/L1/$(NUMBER_OF_READS)_$(MEAN_READ_LEN)_$(ERROR_RATE).txt
 
 ##
 ## L1 Quantification repetitive element reads
 ##
-$(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).L1.count: $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).re.filtered.bed $(LIBRARY_PATH)/L1/$(MEAN_READ_LEN).counts.txt
+$(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).L1.count: $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).re.filtered.bed
+	@echo -e "======================\n" >> $(LOG_FILE)
+	@echo -e "$(timestamp) $(PIPELINE_NAME): Counting the number of reads on each L1 subfamily:\n" >> $(LOG_FILE)
 	cat $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).re.filtered.bed | egrep -w "L1P1_LINE__L1|L1PA2_LINE__L1|L1PA3_LINE__L1|L1PA4_LINE__L1|L1HS_LINE__L1" | awk '{print $$(NF-1)}' | sort | uniq -c > $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).L1.count
-	
 
-
-
+##
+## Correcting the number of reads mapped to L1Hs
+##	
+$(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).L1.count.corrected: $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).L1.count $(LIBRARY_PATH)/L1/$(NUMBER_OF_READS)_$(MEAN_READ_LEN)_$(ERROR_RATE).txt
+	@echo -e "======================\n" >> $(LOG_FILE)
+	@echo -e "$(timestamp) $(PIPELINE_NAME): Counting the number of reads on each L1 subfamily:\n" >> $(LOG_FILE)
 
 ##
 ## Main sub-target
 ##
-processSample: $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).L1.count
+processSample: $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).L1.count.corrected
 #	## Copy Output descriptions file
 #	#cp $(SRNABENCH_LIBS)/sRNAbenchOutputDescription.txt $(OUTPUT_DIR)/$(SAMPLE_ID)/sRNAbenchOutputDescription.txt 
 #	## END PIPELINE
