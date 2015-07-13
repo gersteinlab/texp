@@ -4,7 +4,7 @@ PIPELINE_NAME = TeXP
 DATA_DIR          := NULL
 OUTPUT_DIR        := NULL
 INPUT_FILE_PATH   := NULL
-SAMPLE_NAME       := NULL
+#SAMPLE_NAME       := NULL
 REFERENCE_GENOME  := NULL
 
 ##
@@ -38,7 +38,7 @@ QFILTER_MIN_QUAL                := 20
 ##
 SAMPLE_ID := $(INPUT_FILE_ID)
 ifneq ($(SAMPLE_NAME),NULL)
-  SAMPLE_ID := $(SAMPLE_ID)_$(SAMPLE_NAME)
+  SAMPLE_ID := $(SAMPLE_NAME)
 endif
 
 LOG_FILE         := $(OUTPUT_DIR)/$(SAMPLE_ID).log
@@ -88,15 +88,14 @@ timestamp := `/bin/date "+%Y-%m-%d(%H:%M:%S)"`
 ##
 ## Main make target
 ##
-.PHONY: all
+.PHONY: all update_read_lenth
 .DEFAULT: all
 all: processSample
 
 ##
 ## TO-DO:
-##  - ReadLength: Make it independent of the conversion process.
-##  - Add a lock to the 
-##
+##  - Add a lock in the simulation to avoid multiple simulations with the same parameters to run in parallel 
+##  - $(LIBRARY_PATH)/L1/ref/L1.bases.ref: Create this file dinamically based on a reference genome, instead of a static file?
 
 ##
 ## Make results directory & Convert INPUT if necessary
@@ -111,21 +110,21 @@ $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).fastq: $(INPUT_FILE_PATH)
 ##
 ## Guess meanread length
 ##
-update_read_lenth: $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).fastq
+$(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).read_lenth: $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).fastq
 	@echo -e "======================\n" >> $(LOG_FILE)
 	@echo -e "$(timestamp) $(PIPELINE_NAME): Guessing read legth based on fastq sequences:\n" >> $(LOG_FILE)
 	$(eval MEAN_READ_LEN := $(shell cat $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).fastq | head -n 40000 | awk '{if((NR+2)%4==0) {count++; sum+=length($$_)}} END{print sum/count}'))
+	echo "$(MEAN_READ_LEN)" > $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).read_lenth
 	@echo -e "$(timestamp) $(PIPELINE_NAME): Finished guessing read legth based on fastq sequences:\n" >> $(OUTPUT_DIR)/$(SAMPLE_ID).log
 
 ##
 ## Guess Fastq quality encoding
 ##
-$(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).qualityEncoding: $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).fastq update_read_lenth $(LIBRARY_PATH)/L1/$(NUMBER_OF_READS)_$(MEAN_READ_LEN)_$(ERROR_RATE).txt
+$(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).qualityEncoding: $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).fastq $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).read_lenth $(LIBRARY_PATH)/L1/$(NUMBER_OF_READS)_$(MEAN_READ_LEN)_$(ERROR_RATE).txt
 	@echo -e "======================\n" >> $(LOG_FILE)
 	@echo -e "$(timestamp) $(PIPELINE_NAME): Guessing encoding of fastq read-qualities:\n" >> $(LOG_FILE)
 	@echo -e "$(timestamp) $(PIPELINE_NAME): cat $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).fastq | head -n 40000 | awk '{if(NR%4==0) printf("%s",$$0);}' | od -A n -t u1 | awk 'BEGIN{min=100;max=0;}{for(i=1;i<=NF;i++) {if($$i>max) max=$$i; if($$i<min) min=$$i;}}END{if(max<=74 && min<59) print "33"; else if(max>73 && min>=64) print "64"; else if(min>=59 && min<64 && max>73) print "64"; else print "64";}' > $@\n" >> $(LOG_FILE)
 	cat $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).fastq | head -n 40000 | awk '{if(NR%4==0) printf("%s",$$0);}' | od -A n -t u1 | awk 'BEGIN{min=100;max=0;}{for(i=1;i<=NF;i++) {if($$i>max) max=$$i; if($$i<min) min=$$i;}}END{if(max<=74 && min<59) print "33"; else if(max>73 && min>=64) print "64"; else if(min>=59 && min<64 && max>73) print "64"; else print "64";}' > $@
-#	$(eval MEAN_READ_LEN := $(shell cat $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).fastq | head -n 40000 | awk '{if((NR+2)%4==0) {count++; sum+=length($$_)}} END{print sum/count}'))
 	@echo -e "$(timestamp) $(PIPELINE_NAME): Finished guessing encoding of fastq read-qualities:\n" >> $(OUTPUT_DIR)/$(SAMPLE_ID).log
 
 
@@ -202,10 +201,9 @@ $(LIBRARY_PATH)/L1/$(NUMBER_OF_READS)_$(MEAN_READ_LEN)_$(ERROR_RATE).prop.txt: $
 ##
 ## Create signature file
 ##
-
 $(OUTPUT_DIR)/$(SAMPLE_ID)/L1.signatures.txt: $(LIBRARY_PATH)/L1/$(NUMBER_OF_READS)_$(MEAN_READ_LEN)_$(ERROR_RATE).prop.txt $(LIBRARY_PATH)/L1/ref/L1.bases.ref
 	@echo -e "======================\n" >> $(LOG_FILE)
-	@echo -e "$(timestamp) $(PIPELINE_NAME): Correcting the number of reads on L1Hs:\n" >> $(LOG_FILE)
+	@echo -e "$(timestamp) $(PIPELINE_NAME): Compiling L1 signature files:\n" >> $(LOG_FILE)
 	paste $(LIBRARY_PATH)/L1/$(NUMBER_OF_READS)_$(MEAN_READ_LEN)_$(ERROR_RATE).prop.txt $(LIBRARY_PATH)/L1/ref/L1.bases.ref | awk '{print $$1,$$2,$$4}' > $(OUTPUT_DIR)/$(SAMPLE_ID)/L1.signatures.txt
 
 ##
@@ -226,7 +224,7 @@ $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).L1.count.corrected: $(OUTPUT_DIR)/$(SAMP
 	@echo -e "======================\n" >> $(LOG_FILE)
 	@echo -e "$(timestamp) $(PIPELINE_NAME): Correcting the number of reads on L1Hs:\n" >> $(LOG_FILE)
 	$(R_BIN) --no-restore --no-save --args $(OUTPUT_DIR)/$(SAMPLE_ID)/L1.signatures.txt $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).L1.count $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).sorted.bam.tot < $(LIBRARY_PATH)/L1/ref/lsei.template.r >> $(LOG_FILE)
-	@echo -e "$(timestamp) $(PIPELINE_NAME): Writing L1 quantification on:" >> $(LOG_FILE)
+	@echo -e "$(timestamp) $(PIPELINE_NAME): Writing L1 quantification files:" >> $(LOG_FILE)
 	@echo -e "$(timestamp) $(PIPELINE_NAME):  - $(OUTPUT_DIR)/$(SAMPLE_ID)/L1.signatures.txt $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).L1.count.corrected" >> $(LOG_FILE)
 	@echo -e "$(timestamp) $(PIPELINE_NAME):  - $(OUTPUT_DIR)/$(SAMPLE_ID)/L1.signatures.txt $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).L1.count.rpkm" >> $(LOG_FILE)
 	@echo -e "$(timestamp) $(PIPELINE_NAME):  - $(OUTPUT_DIR)/$(SAMPLE_ID)/L1.signatures.txt $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).L1.count.rpkm.corrected" >> $(LOG_FILE)
