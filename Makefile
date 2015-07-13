@@ -4,7 +4,7 @@ PIPELINE_NAME = TeXP
 DATA_DIR          := NULL
 OUTPUT_DIR        := NULL
 INPUT_FILE_PATH   := NULL
-#SAMPLE_NAME       := NULL
+SAMPLE_NAME       := NULL
 REFERENCE_GENOME  := NULL
 
 ##
@@ -53,11 +53,11 @@ NUMBER_OF_LOOPS := 100
 ##
 ## Detect filetype and extract from SRA format if necessary
 ##
-COMMAND_CONVERT_INPUT := cat $(INPUT_FILE_PATH) > $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).fastq
+COMMAND_CONVERT_INPUT := cat $(INPUT_FILE_PATH)
 ifeq ($(suffix $(INPUT_FILE_PATH)),.sra)
-	COMMAND_CONVERT_INPUT := $(SRATOOLS_EXE) --split-spot --stdout $(INPUT_FILE_PATH) > $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).fastq
+	COMMAND_CONVERT_INPUT := $(SRATOOLS_EXE) --split-spot --stdout $(INPUT_FILE_PATH) 
 else ifeq ($(suffix $(INPUT_FILE_PATH)),.gz)
-	COMMAND_CONVERT_INPUT := gunzip -c $(INPUT_FILE_PATH) > $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).fastq
+	COMMAND_CONVERT_INPUT := gunzip -c $(INPUT_FILE_PATH) 
 endif
 
 
@@ -100,31 +100,32 @@ all: processSample
 ##
 ## Make results directory & Convert INPUT if necessary
 ##
-$(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).fastq: $(INPUT_FILE_PATH)
+$(OUTPUT_DIR)/$(SAMPLE_ID): $(INPUT_FILE_PATH)
 	@echo -e "$(USAGE)"
 	mkdir -p $(OUTPUT_DIR)/$(SAMPLE_ID)
 	@echo -e "$(timestamp) $(PIPELINE_NAME): Created results dir: $(OUTPUT_DIR)/$(SAMPLE_ID)\n" >> $(LOG_FILE)
-	$(COMMAND_CONVERT_INPUT) 
-	@echo -e "$(timestamp) $(PIPELINE_NAME): Converted INPUT_FILE: $(INPUT_FILE_NAME) to $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).fastq\n" >> $(LOG_FILE)
+#	$(COMMAND_CONVERT_INPUT) 
+#	@echo -e "$(timestamp) $(PIPELINE_NAME): Converted INPUT_FILE: $(INPUT_FILE_NAME) to $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).fastq\n" >> $(LOG_FILE)
 
 ##
 ## Guess meanread length
 ##
-$(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).read_lenth: $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).fastq
+$(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).read_lenth: $(INPUT_FILE_PATH) $(OUTPUT_DIR)/$(SAMPLE_ID)
 	@echo -e "======================\n" >> $(LOG_FILE)
 	@echo -e "$(timestamp) $(PIPELINE_NAME): Guessing read legth based on fastq sequences:\n" >> $(LOG_FILE)
-	$(eval MEAN_READ_LEN := $(shell cat $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).fastq | head -n 40000 | awk '{if((NR+2)%4==0) {count++; sum+=length($$_)}} END{print sum/count}'))
+	$(eval MEAN_READ_LEN := $(shell $(COMMAND_CONVERT_INPUT) | head -n 40000 | awk '{if((NR+2)%4==0) {count++; sum+=length($$_)}} END{print sum/count}'))
 	echo "$(MEAN_READ_LEN)" > $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).read_lenth
 	@echo -e "$(timestamp) $(PIPELINE_NAME): Finished guessing read legth based on fastq sequences:\n" >> $(OUTPUT_DIR)/$(SAMPLE_ID).log
 
 ##
 ## Guess Fastq quality encoding
 ##
-$(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).qualityEncoding: $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).fastq $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).read_lenth $(LIBRARY_PATH)/L1/$(NUMBER_OF_READS)_$(MEAN_READ_LEN)_$(ERROR_RATE).txt
+$(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).qualityEncoding: $(INPUT_FILE_PATH) $(OUTPUT_DIR)/$(SAMPLE_ID) $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).read_lenth $(LIBRARY_PATH)/L1/$(NUMBER_OF_READS)_$(MEAN_READ_LEN)_$(ERROR_RATE).txt
 	@echo -e "======================\n" >> $(LOG_FILE)
 	@echo -e "$(timestamp) $(PIPELINE_NAME): Guessing encoding of fastq read-qualities:\n" >> $(LOG_FILE)
-	@echo -e "$(timestamp) $(PIPELINE_NAME): cat $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).fastq | head -n 40000 | awk '{if(NR%4==0) printf("%s",$$0);}' | od -A n -t u1 | awk 'BEGIN{min=100;max=0;}{for(i=1;i<=NF;i++) {if($$i>max) max=$$i; if($$i<min) min=$$i;}}END{if(max<=74 && min<59) print "33"; else if(max>73 && min>=64) print "64"; else if(min>=59 && min<64 && max>73) print "64"; else print "64";}' > $@\n" >> $(LOG_FILE)
-	cat $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).fastq | head -n 40000 | awk '{if(NR%4==0) printf("%s",$$0);}' | od -A n -t u1 | awk 'BEGIN{min=100;max=0;}{for(i=1;i<=NF;i++) {if($$i>max) max=$$i; if($$i<min) min=$$i;}}END{if(max<=74 && min<59) print "33"; else if(max>73 && min>=64) print "64"; else if(min>=59 && min<64 && max>73) print "64"; else print "64";}' > $@
+	@echo -e "$(timestamp) $(PIPELINE_NAME): $(COMMAND_CONVERT_INPUT) | head -n 40000 | awk '{if(NR%4==0) printf("%s",$$0);}' | od -A n -t u1 | awk 'BEGIN{min=100;max=0;}{for(i=1;i<=NF;i++) {if($$i>max) max=$$i; if($$i<min) min=$$i;}}END{if(max<=74 && min<59) print "33"; else if(max>73 && min>=64) print "64"; else if(min>=59 && min<64 && max>73) print "64"; else print "64";}' > $@\n" >> $(LOG_FILE)
+#	cat $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).fastq | head -n 40000 | awk '{if(NR%4==0) printf("%s",$$0);}' | od -A n -t u1 | awk 'BEGIN{min=100;max=0;}{for(i=1;i<=NF;i++) {if($$i>max) max=$$i; if($$i<min) min=$$i;}}END{if(max<=74 && min<59) print "33"; else if(max>73 && min>=64) print "64"; else if(min>=59 && min<64 && max>73) print "64"; else print "64";}' > $@
+	$(COMMAND_CONVERT_INPUT) | head -n 40000 | awk '{if(NR%4==0) printf("%s",$$0);}' | od -A n -t u1 | awk 'BEGIN{min=100;max=0;}{for(i=1;i<=NF;i++) {if($$i>max) max=$$i; if($$i<min) min=$$i;}}END{if(max<=74 && min<59) print "33"; else if(max>73 && min>=64) print "64"; else if(min>=59 && min<64 && max>73) print "64"; else print "64";}' > $@
 	@echo -e "$(timestamp) $(PIPELINE_NAME): Finished guessing encoding of fastq read-qualities:\n" >> $(OUTPUT_DIR)/$(SAMPLE_ID).log
 
 
@@ -134,8 +135,8 @@ $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).qualityEncoding: $(OUTPUT_DIR)/$(SAMPLE_
 $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).filtered.fastq: $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).qualityEncoding 
 	@echo -e "======================\n" >> $(LOG_FILE)
 	@echo -e "$(timestamp) $(PIPELINE_NAME): Filtering reads by base quality:\n" >> $(LOG_FILE)
-	@echo -e "$(timestamp) $(PIPELINE_NAME): cat $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).fastq | $(FASTX_FILTER_EXE) -v -Q$(shell cat $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).qualityEncoding) -p $(QFILTER_MIN_READ_FRAC) -q $(QFILTER_MIN_QUAL) > $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).filtered.fastq\n" >> $(LOG_FILE) 2>> $(OUTPUT_DIR)/$(SAMPLE_ID).err
-	cat $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).fastq | $(FASTX_FILTER_EXE) -v -Q$(shell cat $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).qualityEncoding) -p $(QFILTER_MIN_READ_FRAC) -q $(QFILTER_MIN_QUAL) > $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).filtered.fastq 2>>$(LOG_FILE)
+	@echo -e "$(timestamp) $(PIPELINE_NAME): $(COMMAND_CONVERT_INPUT) | $(FASTX_FILTER_EXE) -v -Q$(shell cat $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).qualityEncoding) -p $(QFILTER_MIN_READ_FRAC) -q $(QFILTER_MIN_QUAL) > $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).filtered.fastq\n" >> $(LOG_FILE) 2>> $(OUTPUT_DIR)/$(SAMPLE_ID).err
+	$(COMMAND_CONVERT_INPUT) | $(FASTX_FILTER_EXE) -v -Q$(shell cat $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).qualityEncoding) -p $(QFILTER_MIN_READ_FRAC) -q $(QFILTER_MIN_QUAL) > $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).filtered.fastq 2>>$(LOG_FILE)
 	@echo -e "$(timestamp) $(PIPELINE_NAME): Finished filtering reads by base quality\n" >> $(LOG_FILE)
 	## Count reads that failed the quality filter
 	grep "low-quality reads" $(LOG_FILE) | awk '{print "failed_quality_filter\t"$$2}' >> $(OUTPUT_DIR)/$(SAMPLE_ID).stats
