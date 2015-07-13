@@ -167,7 +167,6 @@ $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).re.filtered.bed: $(OUTPUT_DIR)/$(SAMPLE_
 	@echo -e "$(timestamp) $(PIPELINE_NAME): Creating BED with reads coordinates:\n" >> $(LOG_FILE)
 	$(INTERSERC_BIN) -f 0.75 -a $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).re.filtered.bam -b $(REPEAT_MASKER_TOT_BED) -sorted -bed -wo > $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).re.filtered.bed
 
-
 ##
 ## SIMULATE reads from L1 if they do not exists
 ##
@@ -191,22 +190,44 @@ $(LIBRARY_PATH)/L1/$(NUMBER_OF_READS)_$(MEAN_READ_LEN)_$(ERROR_RATE).txt:
 		cat $(LIBRARY_PATH)/L1/simu/$(NUMBER_OF_READS)_$(MEAN_READ_LEN)_$(ERROR_RATE)_$$iter.sorted.bam.L1.bed | awk '{print $$(NF-1)}' | sort | uniq -c > $(LIBRARY_PATH)/L1/simu/$(NUMBER_OF_READS)_$(MEAN_READ_LEN)_$(ERROR_RATE)_$$iter.sorted.bam.L1.bed.count; \
 	done
 	@echo -e "$(timestamp) $(PIPELINE_NAME): Calculating the expected number of reads on each subfamily:\n" >> $(LOG_FILE)
-	cat $(LIBRARY_PATH)/L1/simu/$(NUMBER_OF_READS)_$(MEAN_READ_LEN)_$(ERROR_RATE)_*.sorted.bam.L1.bed.count | sort -k2,2 | sed 's/^[ ]*//g' | awk 'BEGIN{first=1} {if ( first == 1 ) {id=$$2;first=0}; if ( id != $$2 ) {print sum/count,id;id=$$2;sum=0;count=0}; sum+=$$1;count++}; END{print sum/count,id;}' > $(LIBRARY_PATH)/L1/$(NUMBER_OF_READS)_$(MEAN_READ_LEN)_$(ERROR_RATE).txt
+	echo "L1_Subfamily L1_Ref_bases" > $(LIBRARY_PATH)/L1/$(NUMBER_OF_READS)_$(MEAN_READ_LEN)_$(ERROR_RATE).txt
+	cat $(LIBRARY_PATH)/L1/simu/$(NUMBER_OF_READS)_$(MEAN_READ_LEN)_$(ERROR_RATE)_*.sorted.bam.L1.bed.count | sort -k2,2 | sed 's/^[ ]*//g' | awk 'BEGIN{first=1} {if ( first == 1 ) {id=$$2;first=0}; if ( id != $$2 ) {print sum/count,id;id=$$2;sum=0;count=0}; sum+=$$1;count++}; END{print id,sum/count;}' | sed 's/_LINE__L1//g' >> $(LIBRARY_PATH)/L1/$(NUMBER_OF_READS)_$(MEAN_READ_LEN)_$(ERROR_RATE).txt
 
 ##
-## L1 Quantification repetitive element reads
+## Create auxiliary file with proportion of simulated reads on each subfamily
+##
+$(LIBRARY_PATH)/L1/$(NUMBER_OF_READS)_$(MEAN_READ_LEN)_$(ERROR_RATE).prop.txt: $(LIBRARY_PATH)/L1/$(NUMBER_OF_READS)_$(MEAN_READ_LEN)_$(ERROR_RATE).txt
+	$(eval T_SUM := $(shell cat $(LIBRARY_PATH)/L1/$(NUMBER_OF_READS)_$(MEAN_READ_LEN)_$(ERROR_RATE).txt | awk '{sum+=$$2} END{print sum}'))
+	cat $(LIBRARY_PATH)/L1/$(NUMBER_OF_READS)_$(MEAN_READ_LEN)_$(ERROR_RATE).txt | awk '{sum+=$$2} END{print sum}'
+	cat $(LIBRARY_PATH)/L1/$(NUMBER_OF_READS)_$(MEAN_READ_LEN)_$(ERROR_RATE).txt | awk -v sum=$(T_SUM) '{print $$1,$$2/sum}' > $(LIBRARY_PATH)/L1/$(NUMBER_OF_READS)_$(MEAN_READ_LEN)_$(ERROR_RATE).prop.txt
+
+##
+## Create signature file
+##
+
+$(OUTPUT_DIR)/$(SAMPLE_ID)/L1.signatures.txt: $(LIBRARY_PATH)/L1/$(NUMBER_OF_READS)_$(MEAN_READ_LEN)_$(ERROR_RATE).prop.txt $(LIBRARY_PATH)/L1/ref/L1.bases.ref
+	@echo -e "======================\n" >> $(LOG_FILE)
+	@echo -e "$(timestamp) $(PIPELINE_NAME): Correcting the number of reads on L1Hs:\n" >> $(LOG_FILE)
+	paste $(LIBRARY_PATH)/L1/$(NUMBER_OF_READS)_$(MEAN_READ_LEN)_$(ERROR_RATE).prop.txt $(LIBRARY_PATH)/L1/ref/L1.bases.ref | awk '{print $$1,$$2,$$4}' > $(OUTPUT_DIR)/$(SAMPLE_ID)/L1.signatures.txt
+
+##
+## Quantification of L1 repetitive element reads
 ##
 $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).L1.count: $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).re.filtered.bed
 	@echo -e "======================\n" >> $(LOG_FILE)
 	@echo -e "$(timestamp) $(PIPELINE_NAME): Counting the number of reads on each L1 subfamily:\n" >> $(LOG_FILE)
-	cat $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).re.filtered.bed | egrep -w "L1P1_LINE__L1|L1PA2_LINE__L1|L1PA3_LINE__L1|L1PA4_LINE__L1|L1HS_LINE__L1" | awk '{print $$(NF-1)}' | sort | uniq -c > $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).L1.count
+	echo "L1_count L1_Subfamily" > $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).L1.count
+	cat $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).re.filtered.bed | egrep -w "L1P1_LINE__L1|L1PA2_LINE__L1|L1PA3_LINE__L1|L1PA4_LINE__L1|L1HS_LINE__L1" | awk '{print $$(NF-1)}' | sort | uniq -c | sed 's/_LINE__L1//g' >> $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).L1.count
+	cat $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).L1.count | awk '{print $$2,$$1}' > $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).L1.count.t
+	mv $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).L1.count.t $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).L1.count 
 
 ##
 ## Correcting the number of reads mapped to L1Hs
 ##	
-$(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).L1.count.corrected: $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).L1.count $(LIBRARY_PATH)/L1/$(NUMBER_OF_READS)_$(MEAN_READ_LEN)_$(ERROR_RATE).txt
+$(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).L1.count.corrected: $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).L1.count $(OUTPUT_DIR)/$(SAMPLE_ID)/L1.signatures.txt
 	@echo -e "======================\n" >> $(LOG_FILE)
-	@echo -e "$(timestamp) $(PIPELINE_NAME): Counting the number of reads on each L1 subfamily:\n" >> $(LOG_FILE)
+	@echo -e "$(timestamp) $(PIPELINE_NAME): Correcting the number of reads on L1Hs:\n" >> $(LOG_FILE)
+	paste $(LIBRARY_PATH)/L1/$(NUMBER_OF_READS)_$(MEAN_READ_LEN)_$(ERROR_RATE).txt $(LIBRARY_PATH)/L1/ref/L1.bases.ref | awk '{print $$1,$$2,$$3}' > $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID)
 
 ##
 ## Main sub-target
@@ -216,5 +237,5 @@ processSample: $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).L1.count.corrected
 #	#cp $(SRNABENCH_LIBS)/sRNAbenchOutputDescription.txt $(OUTPUT_DIR)/$(SAMPLE_ID)/sRNAbenchOutputDescription.txt 
 #	## END PIPELINE
 #	#@echo -e "$(ts) SMRNAPIPELINE: END smallRNA-seq Pipeline for sample $(SAMPLE_ID)\n======================\n" >> $(LOG_FILE)
-
+#	$(R_bin) --no-restore --no-save --args 2010-01-28 example 100 < exmpl.R
 
