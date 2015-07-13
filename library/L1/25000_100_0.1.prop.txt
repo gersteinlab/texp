@@ -1,4 +1,4 @@
-L1_Subfamily 0
+L1_Subfamily L1Hs_Transcript
 L1HS 0.30478
 L1P1 0.0214982
 L1PA2 0.314411

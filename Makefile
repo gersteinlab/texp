@@ -23,6 +23,7 @@ INTERSERC_BIN    := $(EXE_DIR)/bin/intersectBed
 BOWTIE_INDEX     := "/home2/fn64/genomes/Homo_sapiens/hg38/toBowtie2/hg38"
 FASTX_FILTER_EXE := $(EXE_DIR)/bin/fastq_quality_filter
 WGSIM_BIN        := /home2/fn64/tools/manual/bin/wgsim
+R_BIN            := /home2/fn64/tools/manual/bin/R
 
 LIBRARY_PATH     := /home2/fn64/projects/TeXP/library
 
@@ -34,13 +35,13 @@ MEAN_READ_LEN                   := 100
 QFILTER_MIN_READ_FRAC           := 80
 QFILTER_MIN_QUAL                := 20
 
-LOG_FILE         := $(OUTPUT_DIR)/$(SAMPLE_ID).log
-
 ##
 SAMPLE_ID := $(INPUT_FILE_ID)
 ifneq ($(SAMPLE_NAME),NULL)
   SAMPLE_ID := $(SAMPLE_ID)_$(SAMPLE_NAME)
 endif
+
+LOG_FILE         := $(OUTPUT_DIR)/$(SAMPLE_ID).log
 
 ##
 ## Simulation parameters
@@ -177,11 +178,8 @@ $(LIBRARY_PATH)/L1/$(NUMBER_OF_READS)_$(MEAN_READ_LEN)_$(ERROR_RATE).txt:
 	@echo -e "$(timestamp) $(PIPELINE_NAME): Creating reads from based on L1 reference sequence:\n" >> $(LOG_FILE)
 	mkdir -p /home2/fn64/projects/TeXP/library/L1/simu/
 	@for iter in $(shell seq 1 $(NUMBER_OF_LOOPS) ); do \
-#		$(WGSIM_BIN) -1 $(MEAN_READ_LEN) -N $(NUMBER_OF_READS) -d0 -r $(ERROR_RATE) -e 0 -R 0 $(LIBRARY_PATH)/L1/ref/L1HS.ref.fa $(LIBRARY_PATH)/L1/simu/$(NUMBER_OF_READS)_$(MEAN_READ_LEN)_$(ERROR_RATE)_$$iter.simu /dev/null 2> /dev/null > /dev/null ; \
 		$(WGSIM_BIN) -S $$(date "+%N") -1 $(MEAN_READ_LEN) -N $(NUMBER_OF_READS) -d0 -r$(ERROR_RATE) -e 0 -R 0 $(LIBRARY_PATH)/L1/ref/L1HS.ref.fa $(LIBRARY_PATH)/L1/simu/$(NUMBER_OF_READS)_$(MEAN_READ_LEN)_$(ERROR_RATE)_$$iter.simu /dev/null > /dev/null 2> /dev/null ; \
-#		cat $(LIBRARY_PATH)/L1/simu/$(NUMBER_OF_READS)_$(MEAN_READ_LEN)_$(ERROR_RATE)_$$iter.simu | sed -n '1~4s/^@/>/p;2~4p' > $(LIBRARY_PATH)/L1/simu/$(NUMBER_OF_READS)_$(MEAN_READ_LEN)_$(ERROR_RATE)_$$iter.fasta; rm $(LIBRARY_PATH)/L1/simu/$(NUMBER_OF_READS)_$(MEAN_READ_LEN)_$(ERROR_RATE)_$$iter.simu; \
     done
-#	@echo -e "$(timestamp) $(PIPELINE_NAME): Aligning simulated reads to the reference genome and counting L1 subfamilies:\n" >> $(LOG_FILE)
 	@for iter in $(shell seq 1 $(NUMBER_OF_LOOPS) ); do \
 		$(BOWTIE_BIN) -p $(N_THREADS) $(BOWTIE_PARAMS) -x $(BOWTIE_INDEX) -U $(LIBRARY_PATH)/L1/simu/$(NUMBER_OF_READS)_$(MEAN_READ_LEN)_$(ERROR_RATE)_$$iter.simu 2>> $(LOG_FILE) | $(SAMTOOLS_BIN) view -Sb - 2>> $(LOG_FILE) > $(LIBRARY_PATH)/L1/simu/$(NUMBER_OF_READS)_$(MEAN_READ_LEN)_$(ERROR_RATE)_$$iter.bam; \
 		$(SAMTOOLS_BIN) sort -@$(N_THREADS) -m 4G $(LIBRARY_PATH)/L1/simu/$(NUMBER_OF_READS)_$(MEAN_READ_LEN)_$(ERROR_RATE)_$$iter.bam $(LIBRARY_PATH)/L1/simu/$(NUMBER_OF_READS)_$(MEAN_READ_LEN)_$(ERROR_RATE)_$$iter.sorted; \
@@ -199,7 +197,7 @@ $(LIBRARY_PATH)/L1/$(NUMBER_OF_READS)_$(MEAN_READ_LEN)_$(ERROR_RATE).txt:
 $(LIBRARY_PATH)/L1/$(NUMBER_OF_READS)_$(MEAN_READ_LEN)_$(ERROR_RATE).prop.txt: $(LIBRARY_PATH)/L1/$(NUMBER_OF_READS)_$(MEAN_READ_LEN)_$(ERROR_RATE).txt
 	$(eval T_SUM := $(shell cat $(LIBRARY_PATH)/L1/$(NUMBER_OF_READS)_$(MEAN_READ_LEN)_$(ERROR_RATE).txt | awk '{sum+=$$2} END{print sum}'))
 	cat $(LIBRARY_PATH)/L1/$(NUMBER_OF_READS)_$(MEAN_READ_LEN)_$(ERROR_RATE).txt | awk '{sum+=$$2} END{print sum}'
-	cat $(LIBRARY_PATH)/L1/$(NUMBER_OF_READS)_$(MEAN_READ_LEN)_$(ERROR_RATE).txt | awk -v sum=$(T_SUM) '{print $$1,$$2/sum}' > $(LIBRARY_PATH)/L1/$(NUMBER_OF_READS)_$(MEAN_READ_LEN)_$(ERROR_RATE).prop.txt
+	cat $(LIBRARY_PATH)/L1/$(NUMBER_OF_READS)_$(MEAN_READ_LEN)_$(ERROR_RATE).txt | awk -v sum=$(T_SUM) '{if ($$2 ~ /[0-9]*[.][0-9]*/ ) {print $$1,$$2/sum} else {print $$1,$$2} }' > $(LIBRARY_PATH)/L1/$(NUMBER_OF_READS)_$(MEAN_READ_LEN)_$(ERROR_RATE).prop.txt
 
 ##
 ## Create signature file
@@ -227,7 +225,13 @@ $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).L1.count: $(OUTPUT_DIR)/$(SAMPLE_ID)/$(S
 $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).L1.count.corrected: $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).L1.count $(OUTPUT_DIR)/$(SAMPLE_ID)/L1.signatures.txt
 	@echo -e "======================\n" >> $(LOG_FILE)
 	@echo -e "$(timestamp) $(PIPELINE_NAME): Correcting the number of reads on L1Hs:\n" >> $(LOG_FILE)
-	paste $(LIBRARY_PATH)/L1/$(NUMBER_OF_READS)_$(MEAN_READ_LEN)_$(ERROR_RATE).txt $(LIBRARY_PATH)/L1/ref/L1.bases.ref | awk '{print $$1,$$2,$$3}' > $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID)
+	$(R_BIN) --no-restore --no-save --args $(OUTPUT_DIR)/$(SAMPLE_ID)/L1.signatures.txt $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).L1.count $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).sorted.bam.tot < $(LIBRARY_PATH)/L1/ref/lsei.template.r >> $(LOG_FILE)
+	@echo -e "$(timestamp) $(PIPELINE_NAME): Writing L1 quantification on:" >> $(LOG_FILE)
+	@echo -e "$(timestamp) $(PIPELINE_NAME):  - $(OUTPUT_DIR)/$(SAMPLE_ID)/L1.signatures.txt $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).L1.count.corrected" >> $(LOG_FILE)
+	@echo -e "$(timestamp) $(PIPELINE_NAME):  - $(OUTPUT_DIR)/$(SAMPLE_ID)/L1.signatures.txt $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).L1.count.rpkm" >> $(LOG_FILE)
+	@echo -e "$(timestamp) $(PIPELINE_NAME):  - $(OUTPUT_DIR)/$(SAMPLE_ID)/L1.signatures.txt $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).L1.count.rpkm.corrected" >> $(LOG_FILE)
+	@echo -e "$(timestamp) $(PIPELINE_NAME):  - $(OUTPUT_DIR)/$(SAMPLE_ID)/L1.signatures.txt $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).L1.count.signal_proportions" >> $(LOG_FILE)
+
 
 ##
 ## Main sub-target
@@ -237,5 +241,5 @@ processSample: $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).L1.count.corrected
 #	#cp $(SRNABENCH_LIBS)/sRNAbenchOutputDescription.txt $(OUTPUT_DIR)/$(SAMPLE_ID)/sRNAbenchOutputDescription.txt 
 #	## END PIPELINE
 #	#@echo -e "$(ts) SMRNAPIPELINE: END smallRNA-seq Pipeline for sample $(SAMPLE_ID)\n======================\n" >> $(LOG_FILE)
-#	$(R_bin) --no-restore --no-save --args 2010-01-28 example 100 < exmpl.R
+
 
