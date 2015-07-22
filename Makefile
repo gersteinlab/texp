@@ -290,9 +290,10 @@ $(LIBRARY_PATH)/SVA/$(NUMBER_OF_READS_SVA)_$(MEAN_READ_LEN)_$(ERROR_RATE).txt:
 ## Create auxiliary file with proportion of simulated reads on each subfamily
 ##
 $(LIBRARY_PATH)/SVA/$(NUMBER_OF_READS_SVA)_$(MEAN_READ_LEN)_$(ERROR_RATE).prop.txt: $(LIBRARY_PATH)/SVA/$(NUMBER_OF_READS_SVA)_$(MEAN_READ_LEN)_$(ERROR_RATE).txt
-	$(eval T_SUM := $(shell cat $(LIBRARY_PATH)/SVA/$(NUMBER_OF_READS_SVA)_$(MEAN_READ_LEN)_$(ERROR_RATE).txt | awk '{sum+=$$2} END{print sum}'))
-	cat $(LIBRARY_PATH)/SVA/$(NUMBER_OF_READS_SVA)_$(MEAN_READ_LEN)_$(ERROR_RATE).txt | awk '{sum+=$$2} END{print sum}'
-	cat $(LIBRARY_PATH)/SVA/$(NUMBER_OF_READS_SVA)_$(MEAN_READ_LEN)_$(ERROR_RATE).txt | awk -v sum=$(T_SUM) '{if ($$2 ~ /[0-9]*[.][0-9]*/ ) {print $$1,$$2/sum} else {print $$1,$$2} }' > $(LIBRARY_PATH)/SVA/$(NUMBER_OF_READS_SVA)_$(MEAN_READ_LEN)_$(ERROR_RATE).prop.txt
+	@echo -e "======================\n" >> $(LOG_FILE)
+	@echo -e "$(timestamp) $(PIPELINE_NAME): Calculating simulation proportions:\n" >> $(LOG_FILE)
+	echo -n "SVA_Subfamily " > $(LIBRARY_PATH)/SVA/$(NUMBER_OF_READS_SVA)_$(MEAN_READ_LEN)_$(ERROR_RATE).prop.txt
+	$(R_BIN) --no-restore --no-save --args $(LIBRARY_PATH)/SVA/$(NUMBER_OF_READS_SVA)_$(MEAN_READ_LEN)_$(ERROR_RATE).txt $(LIBRARY_PATH)/SVA/$(NUMBER_OF_READS_SVA)_$(MEAN_READ_LEN)_$(ERROR_RATE).prop.txt < $(LIBRARY_PATH)/SVA/ref/prop.template.r >> $(LOG_FILE)
 
 
 ##
@@ -343,7 +344,7 @@ $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).SVA.count.corrected: $(OUTPUT_DIR)/$(SAM
 ## Main sub-target
 ##
 #processSample: $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).L1.count.corrected $(LIBRARY_PATH)/SVA/$(NUMBER_OF_READS_SVA)_$(MEAN_READ_LEN)_$(ERROR_RATE).txt
-processSample: $(LIBRARY_PATH)/SVA/$(NUMBER_OF_READS_SVA)_$(MEAN_READ_LEN)_$(ERROR_RATE).txt
+processSample: $(LIBRARY_PATH)/SVA/$(NUMBER_OF_READS_SVA)_$(MEAN_READ_LEN)_$(ERROR_RATE).prop.txt
 #	## Copy Output descriptions file
 #	#cp $(SRNABENCH_LIBS)/sRNAbenchOutputDescription.txt $(OUTPUT_DIR)/$(SAMPLE_ID)/sRNAbenchOutputDescription.txt 
 #	## END PIPELINE
