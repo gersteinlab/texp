@@ -48,6 +48,7 @@ LOG_FILE         := $(OUTPUT_DIR)/$(SAMPLE_ID).log
 ##
 ERROR_RATE 		:= 0.1
 NUMBER_OF_READS := 25000
+NUMBER_OF_READS_SVA := 100000
 NUMBER_OF_LOOPS := 100
 
 ##
@@ -168,6 +169,16 @@ $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).re.filtered.bed: $(OUTPUT_DIR)/$(SAMPLE_
 	@echo -e "$(timestamp) $(PIPELINE_NAME): Creating BED with reads coordinates:\n" >> $(LOG_FILE)
 	$(INTERSERC_BIN) -f 0.75 -a $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).re.filtered.bam -b $(REPEAT_MASKER_TOT_BED) -sorted -bed -wo > $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).re.filtered.bed
 
+
+##          ##   
+##        ####   
+##          ##   
+##          ##   
+##          ##   
+##          ##   
+########  ###### 
+
+
 ##
 ## SIMULATE reads from L1 if they do not exists
 ##
@@ -188,8 +199,8 @@ $(LIBRARY_PATH)/L1/$(NUMBER_OF_READS)_$(MEAN_READ_LEN)_$(ERROR_RATE).txt:
 		cat $(LIBRARY_PATH)/L1/simu/$(NUMBER_OF_READS)_$(MEAN_READ_LEN)_$(ERROR_RATE)_$$iter.sorted.bam.L1.bed | awk '{print $$(NF-1)}' | sort | uniq -c > $(LIBRARY_PATH)/L1/simu/$(NUMBER_OF_READS)_$(MEAN_READ_LEN)_$(ERROR_RATE)_$$iter.sorted.bam.L1.bed.count; \
 	done
 	@echo -e "$(timestamp) $(PIPELINE_NAME): Calculating the expected number of reads on each subfamily:\n" >> $(LOG_FILE)
-	echo "L1_Subfamily L1_Ref_bases" > $(LIBRARY_PATH)/L1/$(NUMBER_OF_READS)_$(MEAN_READ_LEN)_$(ERROR_RATE).txt
-	cat $(LIBRARY_PATH)/L1/simu/$(NUMBER_OF_READS)_$(MEAN_READ_LEN)_$(ERROR_RATE)_*.sorted.bam.L1.bed.count | sort -k2,2 | sed 's/^[ ]*//g' | awk 'BEGIN{first=1} {if ( first == 1 ) {id=$$2;first=0}; if ( id != $$2 ) {print sum/count,id;id=$$2;sum=0;count=0}; sum+=$$1;count++}; END{print id,sum/count;}' | sed 's/_LINE__L1//g' >> $(LIBRARY_PATH)/L1/$(NUMBER_OF_READS)_$(MEAN_READ_LEN)_$(ERROR_RATE).txt
+	echo "L1_Subfamily L1Hs_Transcript" > $(LIBRARY_PATH)/L1/$(NUMBER_OF_READS)_$(MEAN_READ_LEN)_$(ERROR_RATE).txt
+	cat $(LIBRARY_PATH)/L1/simu/$(NUMBER_OF_READS)_$(MEAN_READ_LEN)_$(ERROR_RATE)_*.sorted.bam.L1.bed.count | sort -k2,2 | sed 's/^[ ]*//g' | awk 'BEGIN{first=1} {if ( first == 1 ) {id=$$2;first=0}; if ( id != $$2 ) {print id,sum/count;id=$$2;sum=0;count=0}; sum+=$$1;count++}; END{print id,sum/count;}' | sed 's/_LINE__L1//g' >> $(LIBRARY_PATH)/L1/$(NUMBER_OF_READS)_$(MEAN_READ_LEN)_$(ERROR_RATE).txt
 
 ##
 ## Create auxiliary file with proportion of simulated reads on each subfamily
@@ -232,10 +243,107 @@ $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).L1.count.corrected: $(OUTPUT_DIR)/$(SAMP
 	@echo -e "$(timestamp) $(PIPELINE_NAME):  - $(OUTPUT_DIR)/$(SAMPLE_ID)/L1.signatures.txt $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).L1.count.signal_proportions" >> $(LOG_FILE)
 
 
+ ######  ##     ##    ###    
+##    ## ##     ##   ## ##   
+##       ##     ##  ##   ##  
+ ######  ##     ## ##     ## 
+      ##  ##   ##  ######### 
+##    ##   ## ##   ##     ## 
+ ######     ###    ##     ## 
+
+
+##
+## SIMULATE reads from SVA if they do not exists
+##
+$(LIBRARY_PATH)/SVA/$(NUMBER_OF_READS_SVA)_$(MEAN_READ_LEN)_$(ERROR_RATE).txt: 
+	@echo -e "======================\n" >> $(LOG_FILE)
+	@echo -e "$(timestamp) $(PIPELINE_NAME): The profile for this study was not found at: $(LIBRARY_PATH)/L1/$(MEAN_READ_LEN).counts.txt\n" >> $(LOG_FILE)
+	@echo -e "$(timestamp) $(PIPELINE_NAME): Simulating reads with length equal to $(MEAN_READ_LEN)\n" >> $(LOG_FILE)
+	@echo -e "$(timestamp) $(PIPELINE_NAME): Creating reads from based on SVA reference sequence:\n" >> $(LOG_FILE)
+	mkdir -p /home2/fn64/projects/TeXP/library/SVA/simu/
+	@for iter in $(shell seq 1 $(NUMBER_OF_LOOPS) ); do \
+		$(WGSIM_BIN) -S $$(date "+%N") -1 $(MEAN_READ_LEN) -N $(NUMBER_OF_READS_SVA) -d0 -r$(ERROR_RATE) -e 0 -R 0 $(LIBRARY_PATH)/SVA/ref/SVA.ref.fa $(LIBRARY_PATH)/SVA/simu/$(NUMBER_OF_READS_SVA)_$(MEAN_READ_LEN)_$(ERROR_RATE)_$$iter.simu /dev/null > /dev/null 2> /dev/null ; \
+    done
+	@for iter in $(shell seq 1 $(NUMBER_OF_LOOPS) ); do \
+		$(BOWTIE_BIN) -p $(N_THREADS) $(BOWTIE_PARAMS) -x $(BOWTIE_INDEX) -U $(LIBRARY_PATH)/SVA/simu/$(NUMBER_OF_READS_SVA)_$(MEAN_READ_LEN)_$(ERROR_RATE)_$$iter.simu 2>> $(LOG_FILE) | $(SAMTOOLS_BIN) view -Sb - 2>> $(LOG_FILE) > $(LIBRARY_PATH)/SVA/simu/$(NUMBER_OF_READS_SVA)_$(MEAN_READ_LEN)_$(ERROR_RATE)_$$iter.bam; \
+		$(SAMTOOLS_BIN) sort -@$(N_THREADS) -m 4G $(LIBRARY_PATH)/SVA/simu/$(NUMBER_OF_READS_SVA)_$(MEAN_READ_LEN)_$(ERROR_RATE)_$$iter.bam $(LIBRARY_PATH)/SVA/simu/$(NUMBER_OF_READS_SVA)_$(MEAN_READ_LEN)_$(ERROR_RATE)_$$iter.sorted; \
+		rm -R $(LIBRARY_PATH)/SVA/simu/$(NUMBER_OF_READS_SVA)_$(MEAN_READ_LEN)_$(ERROR_RATE)_$$iter.bam; \
+		$(INTERSERC_BIN) -f 0.75 -a $(LIBRARY_PATH)/SVA/simu/$(NUMBER_OF_READS_SVA)_$(MEAN_READ_LEN)_$(ERROR_RATE)_$$iter.sorted.bam -b $(LIBRARY_PATH)/SVA/ref/SVA.hg38.bed -sorted -bed -wo > $(LIBRARY_PATH)/SVA/simu/$(NUMBER_OF_READS_SVA)_$(MEAN_READ_LEN)_$(ERROR_RATE)_$$iter.sorted.bam.SVA.bed; \
+		cat $(LIBRARY_PATH)/SVA/simu/$(NUMBER_OF_READS_SVA)_$(MEAN_READ_LEN)_$(ERROR_RATE)_$$iter.sorted.bam.SVA.bed | grep ")SVA_B_" | awk '{print $$(NF-1)}' | sort | uniq -c > $(LIBRARY_PATH)/SVA/simu/$(NUMBER_OF_READS_SVA)_$(MEAN_READ_LEN)_$(ERROR_RATE)_$$iter.sorted.bam.SVA_B.bed.count; \
+		cat $(LIBRARY_PATH)/SVA/simu/$(NUMBER_OF_READS_SVA)_$(MEAN_READ_LEN)_$(ERROR_RATE)_$$iter.sorted.bam.SVA.bed | grep ")SVA_C_" | awk '{print $$(NF-1)}' | sort | uniq -c > $(LIBRARY_PATH)/SVA/simu/$(NUMBER_OF_READS_SVA)_$(MEAN_READ_LEN)_$(ERROR_RATE)_$$iter.sorted.bam.SVA_C.bed.count; \
+		cat $(LIBRARY_PATH)/SVA/simu/$(NUMBER_OF_READS_SVA)_$(MEAN_READ_LEN)_$(ERROR_RATE)_$$iter.sorted.bam.SVA.bed | grep ")SVA_D_" | awk '{print $$(NF-1)}' | sort | uniq -c > $(LIBRARY_PATH)/SVA/simu/$(NUMBER_OF_READS_SVA)_$(MEAN_READ_LEN)_$(ERROR_RATE)_$$iter.sorted.bam.SVA_D.bed.count; \
+		cat $(LIBRARY_PATH)/SVA/simu/$(NUMBER_OF_READS_SVA)_$(MEAN_READ_LEN)_$(ERROR_RATE)_$$iter.sorted.bam.SVA.bed | grep ")SVA_E_" | awk '{print $$(NF-1)}' | sort | uniq -c > $(LIBRARY_PATH)/SVA/simu/$(NUMBER_OF_READS_SVA)_$(MEAN_READ_LEN)_$(ERROR_RATE)_$$iter.sorted.bam.SVA_E.bed.count; \
+		cat $(LIBRARY_PATH)/SVA/simu/$(NUMBER_OF_READS_SVA)_$(MEAN_READ_LEN)_$(ERROR_RATE)_$$iter.sorted.bam.SVA.bed | grep ")SVA_F_" | awk '{print $$(NF-1)}' | sort | uniq -c > $(LIBRARY_PATH)/SVA/simu/$(NUMBER_OF_READS_SVA)_$(MEAN_READ_LEN)_$(ERROR_RATE)_$$iter.sorted.bam.SVA_F.bed.count; \
+	done
+	@echo -e "$(timestamp) $(PIPELINE_NAME): Calculating the expected number of reads on each subfamily:\n" >> $(LOG_FILE)
+	echo "SVA_Subfamily SVA_B_Transcript SVA_C_Transcript SVA_D_Transcript SVA_E_Transcript SVA_F_Transcript " > $(LIBRARY_PATH)/SVA/$(LIBRARY_PATH)/SVA/$(NUMBER_OF_READS_SVA)_$(MEAN_READ_LEN)_$(ERROR_RATE).txt
+	cat $(LIBRARY_PATH)/SVA/simu/$(NUMBER_OF_READS_SVA)_$(MEAN_READ_LEN)_$(ERROR_RATE)_*.sorted.bam.SVA_B.bed.count | sort -k2,2 | sed 's/^[ ]*//g' | awk 'BEGIN{first=1} {if ( first == 1 ) {id=$$2;first=0}; if ( id != $$2 ) {print id,sum/count;id=$$2;sum=0;count=0}; sum+=$$1;count++}; END{print id,sum/count;}' | sed 's/_Retroposon__SVA//g' > temp.SVA_B
+	cat $(LIBRARY_PATH)/SVA/simu/$(NUMBER_OF_READS_SVA)_$(MEAN_READ_LEN)_$(ERROR_RATE)_*.sorted.bam.SVA_C.bed.count | sort -k2,2 | sed 's/^[ ]*//g' | awk 'BEGIN{first=1} {if ( first == 1 ) {id=$$2;first=0}; if ( id != $$2 ) {print id,sum/count;id=$$2;sum=0;count=0}; sum+=$$1;count++}; END{print id,sum/count;}' | sed 's/_Retroposon__SVA//g' > temp.SVA_C
+	cat $(LIBRARY_PATH)/SVA/simu/$(NUMBER_OF_READS_SVA)_$(MEAN_READ_LEN)_$(ERROR_RATE)_*.sorted.bam.SVA_D.bed.count | sort -k2,2 | sed 's/^[ ]*//g' | awk 'BEGIN{first=1} {if ( first == 1 ) {id=$$2;first=0}; if ( id != $$2 ) {print id,sum/count;id=$$2;sum=0;count=0}; sum+=$$1;count++}; END{print id,sum/count;}' | sed 's/_Retroposon__SVA//g' > temp.SVA_D
+	cat $(LIBRARY_PATH)/SVA/simu/$(NUMBER_OF_READS_SVA)_$(MEAN_READ_LEN)_$(ERROR_RATE)_*.sorted.bam.SVA_E.bed.count | sort -k2,2 | sed 's/^[ ]*//g' | awk 'BEGIN{first=1} {if ( first == 1 ) {id=$$2;first=0}; if ( id != $$2 ) {print id,sum/count;id=$$2;sum=0;count=0}; sum+=$$1;count++}; END{print id,sum/count;}' | sed 's/_Retroposon__SVA//g' > temp.SVA_E
+	cat $(LIBRARY_PATH)/SVA/simu/$(NUMBER_OF_READS_SVA)_$(MEAN_READ_LEN)_$(ERROR_RATE)_*.sorted.bam.SVA_F.bed.count | sort -k2,2 | sed 's/^[ ]*//g' | awk 'BEGIN{first=1} {if ( first == 1 ) {id=$$2;first=0}; if ( id != $$2 ) {print id,sum/count;id=$$2;sum=0;count=0}; sum+=$$1;count++}; END{print id,sum/count;}' | sed 's/_Retroposon__SVA//g' > temp.SVA_F
+	paste temp.SVA_B temp.SVA_C temp.SVA_D temp.SVA_E temp.SVA_F | awk '{print $$1,$$2,$$4,$$6,$$8,$$10}' >> $(LIBRARY_PATH)/SVA/$(NUMBER_OF_READS_SVA)_$(MEAN_READ_LEN)_$(ERROR_RATE).txt
+	rm temp.SVA_B temp.SVA_C temp.SVA_D temp.SVA_E temp.SVA_F
+
+
+##
+## Create auxiliary file with proportion of simulated reads on each subfamily
+##
+$(LIBRARY_PATH)/SVA/$(NUMBER_OF_READS_SVA)_$(MEAN_READ_LEN)_$(ERROR_RATE).prop.txt: $(LIBRARY_PATH)/SVA/$(NUMBER_OF_READS_SVA)_$(MEAN_READ_LEN)_$(ERROR_RATE).txt
+	$(eval T_SUM := $(shell cat $(LIBRARY_PATH)/SVA/$(NUMBER_OF_READS_SVA)_$(MEAN_READ_LEN)_$(ERROR_RATE).txt | awk '{sum+=$$2} END{print sum}'))
+	cat $(LIBRARY_PATH)/SVA/$(NUMBER_OF_READS_SVA)_$(MEAN_READ_LEN)_$(ERROR_RATE).txt | awk '{sum+=$$2} END{print sum}'
+	cat $(LIBRARY_PATH)/SVA/$(NUMBER_OF_READS_SVA)_$(MEAN_READ_LEN)_$(ERROR_RATE).txt | awk -v sum=$(T_SUM) '{if ($$2 ~ /[0-9]*[.][0-9]*/ ) {print $$1,$$2/sum} else {print $$1,$$2} }' > $(LIBRARY_PATH)/SVA/$(NUMBER_OF_READS_SVA)_$(MEAN_READ_LEN)_$(ERROR_RATE).prop.txt
+
+
+##
+## Create signature file
+##
+$(OUTPUT_DIR)/$(SAMPLE_ID)/SVA.signatures.txt: $(LIBRARY_PATH)/SVA/$(NUMBER_OF_READS_SVA)_$(MEAN_READ_LEN)_$(ERROR_RATE).prop.txt $(LIBRARY_PATH)/SVA/ref/SVA.bases.ref
+	@echo -e "======================\n" >> $(LOG_FILE)
+	@echo -e "$(timestamp) $(PIPELINE_NAME): Compiling L1 signature files:\n" >> $(LOG_FILE)
+	paste $(LIBRARY_PATH)/SVA/$(NUMBER_OF_READS_SVA)_$(MEAN_READ_LEN)_$(ERROR_RATE).prop.txt $(LIBRARY_PATH)/SVA/ref/SVA.bases.ref | awk '{print $$1,$$2,$$4}' > $(OUTPUT_DIR)/$(SAMPLE_ID)/SVA.signatures.txt
+
+
+##
+## Quantification of SVA repetitive element reads
+##
+$(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).SVA.count: $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).re.filtered.bed
+	@echo -e "======================\n" >> $(LOG_FILE)
+	@echo -e "$(timestamp) $(PIPELINE_NAME): Counting the number of reads on each SVA subfamily:\n" >> $(LOG_FILE)
+	echo "L1_count L1_Subfamily" > $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).SVA.count
+	cat $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).re.filtered.bed | egrep -w "SVA_A_Retroposon__SVA|SVA_B_Retroposon__SVA|SVA_C_Retroposon__SVA|SVA_D_Retroposon__SVA|SVA_E_Retroposon__SVA|SVA_F_Retroposon__SVA" | awk '{print $$(NF-1)}' | sort | uniq -c | sed 's/_Retroposon__SVA//g' >> $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).SVA.count
+	cat $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).SVA.count | awk '{print $$2,$$1}' > $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).SVA.count.t
+	mv $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).SVA.count.t $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).SVA.count 
+
+
+##
+## Correcting the number of reads mapped to SVA
+##	
+$(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).SVA.count.corrected: $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).SVA.count $(OUTPUT_DIR)/$(SAMPLE_ID)/SVA.signatures.txt
+	@echo -e "======================\n" >> $(LOG_FILE)
+	@echo -e "$(timestamp) $(PIPELINE_NAME): Correcting the number of reads on SVA:\n" >> $(LOG_FILE)
+	$(R_BIN) --no-restore --no-save --args $(OUTPUT_DIR)/$(SAMPLE_ID)/SVA.signatures.txt $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).SVA.count $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).sorted.bam.tot < $(LIBRARY_PATH)/SVA/ref/lsei.template.r >> $(LOG_FILE)
+	@echo -e "$(timestamp) $(PIPELINE_NAME): Writing SVA quantification files:" >> $(LOG_FILE)
+	@echo -e "$(timestamp) $(PIPELINE_NAME):  - $(OUTPUT_DIR)/$(SAMPLE_ID)/SVA.signatures.txt $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).SVA.count.corrected" >> $(LOG_FILE)
+	@echo -e "$(timestamp) $(PIPELINE_NAME):  - $(OUTPUT_DIR)/$(SAMPLE_ID)/SVA.signatures.txt $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).SVA.count.rpkm" >> $(LOG_FILE)
+	@echo -e "$(timestamp) $(PIPELINE_NAME):  - $(OUTPUT_DIR)/$(SAMPLE_ID)/SVA.signatures.txt $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).SVA.count.rpkm.corrected" >> $(LOG_FILE)
+	@echo -e "$(timestamp) $(PIPELINE_NAME):  - $(OUTPUT_DIR)/$(SAMPLE_ID)/SVA.signatures.txt $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).SVA.count.signal_proportions" >> $(LOG_FILE)
+
+
+##     ## ######## ########  ##     ## 
+##     ## ##       ##     ## ##     ## 
+##     ## ##       ##     ## ##     ## 
+######### ######   ########  ##     ## 
+##     ## ##       ##   ##    ##   ##  
+##     ## ##       ##    ##    ## ##   
+##     ## ######## ##     ##    ###    
+
+
 ##
 ## Main sub-target
 ##
-processSample: $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).L1.count.corrected
+#processSample: $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).L1.count.corrected $(LIBRARY_PATH)/SVA/$(NUMBER_OF_READS_SVA)_$(MEAN_READ_LEN)_$(ERROR_RATE).txt
+processSample: $(LIBRARY_PATH)/SVA/$(NUMBER_OF_READS_SVA)_$(MEAN_READ_LEN)_$(ERROR_RATE).txt
 #	## Copy Output descriptions file
 #	#cp $(SRNABENCH_LIBS)/sRNAbenchOutputDescription.txt $(OUTPUT_DIR)/$(SAMPLE_ID)/sRNAbenchOutputDescription.txt 
 #	## END PIPELINE
