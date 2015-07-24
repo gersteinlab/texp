@@ -111,7 +111,7 @@ $(OUTPUT_DIR)/$(SAMPLE_ID): $(INPUT_FILE_PATH)
 ##
 ## Guess meanread length
 ##
-$(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).read_lenth: $(INPUT_FILE_PATH) $(OUTPUT_DIR)/$(SAMPLE_ID)
+$(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).read_lenth: $(INPUT_FILE_PATH)
 	@echo -e "======================\n" >> $(LOG_FILE)
 	@echo -e "$(timestamp) $(PIPELINE_NAME): Guessing read legth based on fastq sequences:\n" >> $(LOG_FILE)
 	$(eval MEAN_READ_LEN := $(shell $(COMMAND_CONVERT_INPUT) | head -n 40000 | awk '{if((NR+2)%4==0) {count++; sum+=length($$_)}} END{print sum/count}'))
@@ -121,7 +121,7 @@ $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).read_lenth: $(INPUT_FILE_PATH) $(OUTPUT_
 ##
 ## Guess Fastq quality encoding
 ##
-$(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).qualityEncoding: $(INPUT_FILE_PATH) $(OUTPUT_DIR)/$(SAMPLE_ID) $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).read_lenth $(LIBRARY_PATH)/L1/$(NUMBER_OF_READS)_$(MEAN_READ_LEN)_$(ERROR_RATE).txt
+$(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).qualityEncoding: $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).read_lenth $(LIBRARY_PATH)/L1/$(NUMBER_OF_READS)_$(MEAN_READ_LEN)_$(ERROR_RATE).txt
 	@echo -e "======================\n" >> $(LOG_FILE)
 	@echo -e "$(timestamp) $(PIPELINE_NAME): Guessing encoding of fastq read-qualities:\n" >> $(LOG_FILE)
 	@echo -e "$(timestamp) $(PIPELINE_NAME): $(COMMAND_CONVERT_INPUT) | head -n 40000 | awk '{if(NR%4==0) printf("%s",$$0);}' | od -A n -t u1 | awk 'BEGIN{min=100;max=0;}{for(i=1;i<=NF;i++) {if($$i>max) max=$$i; if($$i<min) min=$$i;}}END{if(max<=74 && min<59) print "33"; else if(max>73 && min>=64) print "64"; else if(min>=59 && min<64 && max>73) print "64"; else print "64";}' > $@\n" >> $(LOG_FILE)
@@ -257,7 +257,7 @@ $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).L1.count.corrected: $(OUTPUT_DIR)/$(SAMP
 ##
 $(LIBRARY_PATH)/SVA/$(NUMBER_OF_READS_SVA)_$(MEAN_READ_LEN)_$(ERROR_RATE).txt: 
 	@echo -e "======================\n" >> $(LOG_FILE)
-	@echo -e "$(timestamp) $(PIPELINE_NAME): The profile for this study was not found at: $(LIBRARY_PATH)/L1/$(MEAN_READ_LEN).counts.txt\n" >> $(LOG_FILE)
+	@echo -e "$(timestamp) $(PIPELINE_NAME): The profile for this study was not found at: $(LIBRARY_PATH)/SVA/$(NUMBER_OF_READS_SVA)_$(MEAN_READ_LEN)_$(ERROR_RATE).txt\n" >> $(LOG_FILE)
 	@echo -e "$(timestamp) $(PIPELINE_NAME): Simulating reads with length equal to $(MEAN_READ_LEN)\n" >> $(LOG_FILE)
 	@echo -e "$(timestamp) $(PIPELINE_NAME): Creating reads from based on SVA reference sequence:\n" >> $(LOG_FILE)
 	mkdir -p /home2/fn64/projects/TeXP/library/SVA/simu/
@@ -301,8 +301,9 @@ $(LIBRARY_PATH)/SVA/$(NUMBER_OF_READS_SVA)_$(MEAN_READ_LEN)_$(ERROR_RATE).prop.t
 ##
 $(OUTPUT_DIR)/$(SAMPLE_ID)/SVA.signatures.txt: $(LIBRARY_PATH)/SVA/$(NUMBER_OF_READS_SVA)_$(MEAN_READ_LEN)_$(ERROR_RATE).prop.txt $(LIBRARY_PATH)/SVA/ref/SVA.bases.ref
 	@echo -e "======================\n" >> $(LOG_FILE)
-	@echo -e "$(timestamp) $(PIPELINE_NAME): Compiling L1 signature files:\n" >> $(LOG_FILE)
-	paste $(LIBRARY_PATH)/SVA/$(NUMBER_OF_READS_SVA)_$(MEAN_READ_LEN)_$(ERROR_RATE).prop.txt $(LIBRARY_PATH)/SVA/ref/SVA.bases.ref | awk '{print $$1,$$2,$$4}' > $(OUTPUT_DIR)/$(SAMPLE_ID)/SVA.signatures.txt
+	@echo -e "$(timestamp) $(PIPELINE_NAME): Compiling SVA signature files:\n" >> $(LOG_FILE)
+#	paste $(LIBRARY_PATH)/SVA/$(NUMBER_OF_READS_SVA)_$(MEAN_READ_LEN)_$(ERROR_RATE).prop.txt $(LIBRARY_PATH)/SVA/ref/SVA.bases.ref | awk '{print $$1,$$2,$$3,$$4,$$5,$$6,$$8}' > $(OUTPUT_DIR)/$(SAMPLE_ID)/SVA.signatures.txt
+	paste $(LIBRARY_PATH)/SVA/$(NUMBER_OF_READS_SVA)_$(MEAN_READ_LEN)_$(ERROR_RATE).prop.txt $(LIBRARY_PATH)/SVA/ref/SVA.bases.ref | awk '{print $$1,$$5,$$6,$$8}' > $(OUTPUT_DIR)/$(SAMPLE_ID)/SVA.signatures.txt
 
 
 ##
@@ -311,7 +312,7 @@ $(OUTPUT_DIR)/$(SAMPLE_ID)/SVA.signatures.txt: $(LIBRARY_PATH)/SVA/$(NUMBER_OF_R
 $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).SVA.count: $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).re.filtered.bed
 	@echo -e "======================\n" >> $(LOG_FILE)
 	@echo -e "$(timestamp) $(PIPELINE_NAME): Counting the number of reads on each SVA subfamily:\n" >> $(LOG_FILE)
-	echo "L1_count L1_Subfamily" > $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).SVA.count
+	echo "SVA_count SVA_Subfamily" > $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).SVA.count
 	cat $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).re.filtered.bed | egrep -w "SVA_A_Retroposon__SVA|SVA_B_Retroposon__SVA|SVA_C_Retroposon__SVA|SVA_D_Retroposon__SVA|SVA_E_Retroposon__SVA|SVA_F_Retroposon__SVA" | awk '{print $$(NF-1)}' | sort | uniq -c | sed 's/_Retroposon__SVA//g' >> $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).SVA.count
 	cat $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).SVA.count | awk '{print $$2,$$1}' > $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).SVA.count.t
 	mv $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).SVA.count.t $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).SVA.count 
@@ -344,7 +345,7 @@ $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).SVA.count.corrected: $(OUTPUT_DIR)/$(SAM
 ## Main sub-target
 ##
 #processSample: $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).L1.count.corrected $(LIBRARY_PATH)/SVA/$(NUMBER_OF_READS_SVA)_$(MEAN_READ_LEN)_$(ERROR_RATE).txt
-processSample: $(LIBRARY_PATH)/SVA/$(NUMBER_OF_READS_SVA)_$(MEAN_READ_LEN)_$(ERROR_RATE).prop.txt
+processSample: $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).SVA.count.corrected
 #	## Copy Output descriptions file
 #	#cp $(SRNABENCH_LIBS)/sRNAbenchOutputDescription.txt $(OUTPUT_DIR)/$(SAMPLE_ID)/sRNAbenchOutputDescription.txt 
 #	## END PIPELINE
