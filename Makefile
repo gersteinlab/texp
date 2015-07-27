@@ -31,7 +31,7 @@ REPEAT_MASKER_OUT     :=
 REPEAT_MASKER_BED     := ~/projects/hg38.rep.noexon.bed
 REPEAT_MASKER_TOT_BED := ~/projects/hg38.rep.bed
 
-MEAN_READ_LEN                   := 100
+#MEAN_READ_LEN                   := 100
 QFILTER_MIN_READ_FRAC           := 80
 QFILTER_MIN_QUAL                := 20
 
@@ -84,12 +84,12 @@ endif
 
 ## Define current time
 timestamp := `/bin/date "+%Y-%m-%d(%H:%M:%S)"`
-
+$(eval MEAN_READ_LEN := $(shell cat $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).read_length))
 
 ##
 ## Main make target
 ##
-.PHONY: all update_read_lenth
+.PHONY: all 
 .DEFAULT: all
 all: processSample
 
@@ -105,23 +105,21 @@ $(OUTPUT_DIR)/$(SAMPLE_ID): $(INPUT_FILE_PATH)
 	@echo -e "$(USAGE)"
 	mkdir -p $(OUTPUT_DIR)/$(SAMPLE_ID)
 	@echo -e "$(timestamp) $(PIPELINE_NAME): Created results dir: $(OUTPUT_DIR)/$(SAMPLE_ID)\n" >> $(LOG_FILE)
-#	$(COMMAND_CONVERT_INPUT) 
-#	@echo -e "$(timestamp) $(PIPELINE_NAME): Converted INPUT_FILE: $(INPUT_FILE_NAME) to $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).fastq\n" >> $(LOG_FILE)
 
 ##
 ## Guess meanread length
 ##
-$(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).read_lenth: $(INPUT_FILE_PATH)
+$(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).read_length: $(INPUT_FILE_PATH) | $(OUTPUT_DIR)/$(SAMPLE_ID)
 	@echo -e "======================\n" >> $(LOG_FILE)
 	@echo -e "$(timestamp) $(PIPELINE_NAME): Guessing read legth based on fastq sequences:\n" >> $(LOG_FILE)
 	$(eval MEAN_READ_LEN := $(shell $(COMMAND_CONVERT_INPUT) | head -n 40000 | awk '{if((NR+2)%4==0) {count++; sum+=length($$_)}} END{print sum/count}'))
-	echo "$(MEAN_READ_LEN)" > $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).read_lenth
+	echo "$(MEAN_READ_LEN)" > $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).read_length
 	@echo -e "$(timestamp) $(PIPELINE_NAME): Finished guessing read legth based on fastq sequences:\n" >> $(OUTPUT_DIR)/$(SAMPLE_ID).log
 
 ##
 ## Guess Fastq quality encoding
 ##
-$(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).qualityEncoding: $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).read_lenth $(LIBRARY_PATH)/L1/$(NUMBER_OF_READS)_$(MEAN_READ_LEN)_$(ERROR_RATE).txt
+$(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).qualityEncoding: $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).read_length
 	@echo -e "======================\n" >> $(LOG_FILE)
 	@echo -e "$(timestamp) $(PIPELINE_NAME): Guessing encoding of fastq read-qualities:\n" >> $(LOG_FILE)
 	@echo -e "$(timestamp) $(PIPELINE_NAME): $(COMMAND_CONVERT_INPUT) | head -n 40000 | awk '{if(NR%4==0) printf("%s",$$0);}' | od -A n -t u1 | awk 'BEGIN{min=100;max=0;}{for(i=1;i<=NF;i++) {if($$i>max) max=$$i; if($$i<min) min=$$i;}}END{if(max<=74 && min<59) print "33"; else if(max>73 && min>=64) print "64"; else if(min>=59 && min<64 && max>73) print "64"; else print "64";}' > $@\n" >> $(LOG_FILE)
@@ -182,7 +180,7 @@ $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).re.filtered.bed: $(OUTPUT_DIR)/$(SAMPLE_
 ##
 ## SIMULATE reads from L1 if they do not exists
 ##
-$(LIBRARY_PATH)/L1/$(NUMBER_OF_READS)_$(MEAN_READ_LEN)_$(ERROR_RATE).txt: 
+$(LIBRARY_PATH)/L1/$(NUMBER_OF_READS)_$(MEAN_READ_LEN)_$(ERROR_RATE).txt: | $(LIBRARY_PATH)/L1/ref/L1HS.ref.fa
 	@echo -e "======================\n" >> $(LOG_FILE)
 	@echo -e "$(timestamp) $(PIPELINE_NAME): The profile for this study was not found at: $(LIBRARY_PATH)/L1/$(MEAN_READ_LEN).counts.txt\n" >> $(LOG_FILE)
 	@echo -e "$(timestamp) $(PIPELINE_NAME): Simulating reads with length equal to $(MEAN_READ_LEN)\n" >> $(LOG_FILE)
@@ -232,7 +230,7 @@ $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).L1.count: $(OUTPUT_DIR)/$(SAMPLE_ID)/$(S
 ##
 ## Correcting the number of reads mapped to L1Hs
 ##	
-$(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).L1.count.corrected: $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).L1.count $(OUTPUT_DIR)/$(SAMPLE_ID)/L1.signatures.txt
+$(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).L1.count.corrected: $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).L1.count $(OUTPUT_DIR)/$(SAMPLE_ID)/L1.signatures.txt 
 	@echo -e "======================\n" >> $(LOG_FILE)
 	@echo -e "$(timestamp) $(PIPELINE_NAME): Correcting the number of reads on L1Hs:\n" >> $(LOG_FILE)
 	$(R_BIN) --no-restore --no-save --args $(OUTPUT_DIR)/$(SAMPLE_ID)/L1.signatures.txt $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).L1.count $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).sorted.bam.tot < $(LIBRARY_PATH)/L1/ref/lsei.template.r >> $(LOG_FILE)
@@ -255,7 +253,7 @@ $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).L1.count.corrected: $(OUTPUT_DIR)/$(SAMP
 ##
 ## SIMULATE reads from SVA if they do not exists
 ##
-$(LIBRARY_PATH)/SVA/$(NUMBER_OF_READS_SVA)_$(MEAN_READ_LEN)_$(ERROR_RATE).txt: 
+$(LIBRARY_PATH)/SVA/$(NUMBER_OF_READS_SVA)_$(MEAN_READ_LEN)_$(ERROR_RATE).txt: | $(LIBRARY_PATH)/SVA/ref/SVA.ref.fa
 	@echo -e "======================\n" >> $(LOG_FILE)
 	@echo -e "$(timestamp) $(PIPELINE_NAME): The profile for this study was not found at: $(LIBRARY_PATH)/SVA/$(NUMBER_OF_READS_SVA)_$(MEAN_READ_LEN)_$(ERROR_RATE).txt\n" >> $(LOG_FILE)
 	@echo -e "$(timestamp) $(PIPELINE_NAME): Simulating reads with length equal to $(MEAN_READ_LEN)\n" >> $(LOG_FILE)
@@ -276,7 +274,7 @@ $(LIBRARY_PATH)/SVA/$(NUMBER_OF_READS_SVA)_$(MEAN_READ_LEN)_$(ERROR_RATE).txt:
 		cat $(LIBRARY_PATH)/SVA/simu/$(NUMBER_OF_READS_SVA)_$(MEAN_READ_LEN)_$(ERROR_RATE)_$$iter.sorted.bam.SVA.bed | grep ")SVA_F_" | awk '{print $$(NF-1)}' | sort | uniq -c > $(LIBRARY_PATH)/SVA/simu/$(NUMBER_OF_READS_SVA)_$(MEAN_READ_LEN)_$(ERROR_RATE)_$$iter.sorted.bam.SVA_F.bed.count; \
 	done
 	@echo -e "$(timestamp) $(PIPELINE_NAME): Calculating the expected number of reads on each subfamily:\n" >> $(LOG_FILE)
-	echo "SVA_Subfamily SVA_B_Transcript SVA_C_Transcript SVA_D_Transcript SVA_E_Transcript SVA_F_Transcript " > $(LIBRARY_PATH)/SVA/$(LIBRARY_PATH)/SVA/$(NUMBER_OF_READS_SVA)_$(MEAN_READ_LEN)_$(ERROR_RATE).txt
+	echo "SVA_Subfamily SVA_B_Transcript SVA_C_Transcript SVA_D_Transcript SVA_E_Transcript SVA_F_Transcript " > $(LIBRARY_PATH)/SVA/$(NUMBER_OF_READS_SVA)_$(MEAN_READ_LEN)_$(ERROR_RATE).txt
 	cat $(LIBRARY_PATH)/SVA/simu/$(NUMBER_OF_READS_SVA)_$(MEAN_READ_LEN)_$(ERROR_RATE)_*.sorted.bam.SVA_B.bed.count | sort -k2,2 | sed 's/^[ ]*//g' | awk 'BEGIN{first=1} {if ( first == 1 ) {id=$$2;first=0}; if ( id != $$2 ) {print id,sum/count;id=$$2;sum=0;count=0}; sum+=$$1;count++}; END{print id,sum/count;}' | sed 's/_Retroposon__SVA//g' > temp.SVA_B
 	cat $(LIBRARY_PATH)/SVA/simu/$(NUMBER_OF_READS_SVA)_$(MEAN_READ_LEN)_$(ERROR_RATE)_*.sorted.bam.SVA_C.bed.count | sort -k2,2 | sed 's/^[ ]*//g' | awk 'BEGIN{first=1} {if ( first == 1 ) {id=$$2;first=0}; if ( id != $$2 ) {print id,sum/count;id=$$2;sum=0;count=0}; sum+=$$1;count++}; END{print id,sum/count;}' | sed 's/_Retroposon__SVA//g' > temp.SVA_C
 	cat $(LIBRARY_PATH)/SVA/simu/$(NUMBER_OF_READS_SVA)_$(MEAN_READ_LEN)_$(ERROR_RATE)_*.sorted.bam.SVA_D.bed.count | sort -k2,2 | sed 's/^[ ]*//g' | awk 'BEGIN{first=1} {if ( first == 1 ) {id=$$2;first=0}; if ( id != $$2 ) {print id,sum/count;id=$$2;sum=0;count=0}; sum+=$$1;count++}; END{print id,sum/count;}' | sed 's/_Retroposon__SVA//g' > temp.SVA_D
@@ -345,7 +343,7 @@ $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).SVA.count.corrected: $(OUTPUT_DIR)/$(SAM
 ## Main sub-target
 ##
 #processSample: $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).L1.count.corrected $(LIBRARY_PATH)/SVA/$(NUMBER_OF_READS_SVA)_$(MEAN_READ_LEN)_$(ERROR_RATE).txt
-processSample: $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).SVA.count.corrected
+processSample: $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).L1.count.corrected $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).SVA.count.corrected 
 #	## Copy Output descriptions file
 #	#cp $(SRNABENCH_LIBS)/sRNAbenchOutputDescription.txt $(OUTPUT_DIR)/$(SAMPLE_ID)/sRNAbenchOutputDescription.txt 
 #	## END PIPELINE
