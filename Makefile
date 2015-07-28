@@ -65,7 +65,7 @@ endif
 ##
 ## Bowtie2 command to align reads to a Reference genome
 ##
-COMMAND_MAP := $(BOWTIE_BIN) -p $(N_THREADS) $(BOWTIE_PARAMS) -x $(BOWTIE_INDEX) -U $(INPUT_FILE_PATH) 2>> $(LOG_FILE) | $(SAMTOOLS_BIN) view -Sb - 2>> $(LOG_FILE) > $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).bam; $(SAMTOOLS_BIN) sort -@$(N_THREADS) -m 4G $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).bam $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).sorted; rm -R $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).bam; 
+COMMAND_MAP := $(BOWTIE_BIN) -p $(N_THREADS) $(BOWTIE_PARAMS) -x $(BOWTIE_INDEX) -U $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).filtered.fastq 2>> $(LOG_FILE) | $(SAMTOOLS_BIN) view -Sb - 2>> $(LOG_FILE) > $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).bam; $(SAMTOOLS_BIN) sort -@$(N_THREADS) -m 4G $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).bam $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).sorted; rm -R $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).bam; 
 COMMAND_HOMOPOL := perl ~/projects/remove_homopol.pl
 COMMAND_PARTIAL := perl ~/projects/filter_qual.pl
 
@@ -84,8 +84,9 @@ endif
 
 ## Define current time
 timestamp := `/bin/date "+%Y-%m-%d(%H:%M:%S)"`
-$(eval MEAN_READ_LEN := $(shell cat $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).read_length))
-
+ifneq ("$(wildcard $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).read_length)","")
+	$(eval MEAN_READ_LEN := $(shell cat $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).read_length))
+endif
 ##
 ## Main make target
 ##
