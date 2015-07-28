@@ -84,15 +84,14 @@ endif
 
 ## Define current time
 timestamp := `/bin/date "+%Y-%m-%d(%H:%M:%S)"`
-ifneq ("$(wildcard $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).read_length)","")
-	$(eval MEAN_READ_LEN := $(shell cat $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).read_length))
-endif
+#$(eval MEAN_READ_LEN := $(shell cat $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).read_length))
 ##
 ## Main make target
 ##
 .PHONY: all 
 .DEFAULT: all
-all: processSample
+
+all: processSample 
 
 ##
 ## TO-DO:
@@ -115,6 +114,7 @@ $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).read_length: $(INPUT_FILE_PATH) | $(OUTP
 	@echo -e "$(timestamp) $(PIPELINE_NAME): Guessing read legth based on fastq sequences:\n" >> $(LOG_FILE)
 	$(eval MEAN_READ_LEN := $(shell $(COMMAND_CONVERT_INPUT) | head -n 40000 | awk '{if((NR+2)%4==0) {count++; sum+=length($$_)}} END{print sum/count}'))
 	echo "$(MEAN_READ_LEN)" > $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).read_length
+#Why MEAN_READ_LEN is not being exported in the rules for simulation? 
 	@echo -e "$(timestamp) $(PIPELINE_NAME): Finished guessing read legth based on fastq sequences:\n" >> $(OUTPUT_DIR)/$(SAMPLE_ID).log
 
 ##
@@ -181,15 +181,16 @@ $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).re.filtered.bed: $(OUTPUT_DIR)/$(SAMPLE_
 ##
 ## SIMULATE reads from L1 if they do not exists
 ##
-$(LIBRARY_PATH)/L1/$(NUMBER_OF_READS)_$(MEAN_READ_LEN)_$(ERROR_RATE).txt: | $(LIBRARY_PATH)/L1/ref/L1HS.ref.fa
+$(LIBRARY_PATH)/L1/$(NUMBER_OF_READS)_$(MEAN_READ_LEN)_$(ERROR_RATE).txt: $(LIBRARY_PATH)/L1/ref/L1HS.ref.fa
 	@echo -e "======================\n" >> $(LOG_FILE)
-	@echo -e "$(timestamp) $(PIPELINE_NAME): The profile for this study was not found at: $(LIBRARY_PATH)/L1/$(MEAN_READ_LEN).counts.txt\n" >> $(LOG_FILE)
+	@echo -e "$(timestamp) $(PIPELINE_NAME): The profile for this study was not found at: $(LIBRARY_PATH)/L1/$(NUMBER_OF_READS)_$(MEAN_READ_LEN)_$(ERROR_RATE).txt\n" >> $(LOG_FILE)
 	@echo -e "$(timestamp) $(PIPELINE_NAME): Simulating reads with length equal to $(MEAN_READ_LEN)\n" >> $(LOG_FILE)
 	@echo -e "$(timestamp) $(PIPELINE_NAME): Creating reads from based on L1 reference sequence:\n" >> $(LOG_FILE)
 	mkdir -p /home2/fn64/projects/TeXP/library/L1/simu/
 	@for iter in $(shell seq 1 $(NUMBER_OF_LOOPS) ); do \
 		$(WGSIM_BIN) -S $$(date "+%N") -1 $(MEAN_READ_LEN) -N $(NUMBER_OF_READS) -d0 -r$(ERROR_RATE) -e 0 -R 0 $(LIBRARY_PATH)/L1/ref/L1HS.ref.fa $(LIBRARY_PATH)/L1/simu/$(NUMBER_OF_READS)_$(MEAN_READ_LEN)_$(ERROR_RATE)_$$iter.simu /dev/null > /dev/null 2> /dev/null ; \
     done
+	@echo -e "$(timestamp) $(PIPELINE_NAME): Aligning simulated reads to the reference genome:\n" >> $(LOG_FILE)
 	@for iter in $(shell seq 1 $(NUMBER_OF_LOOPS) ); do \
 		$(BOWTIE_BIN) -p $(N_THREADS) $(BOWTIE_PARAMS) -x $(BOWTIE_INDEX) -U $(LIBRARY_PATH)/L1/simu/$(NUMBER_OF_READS)_$(MEAN_READ_LEN)_$(ERROR_RATE)_$$iter.simu 2>> $(LOG_FILE) | $(SAMTOOLS_BIN) view -Sb - 2>> $(LOG_FILE) > $(LIBRARY_PATH)/L1/simu/$(NUMBER_OF_READS)_$(MEAN_READ_LEN)_$(ERROR_RATE)_$$iter.bam; \
 		$(SAMTOOLS_BIN) sort -@$(N_THREADS) -m 4G $(LIBRARY_PATH)/L1/simu/$(NUMBER_OF_READS)_$(MEAN_READ_LEN)_$(ERROR_RATE)_$$iter.bam $(LIBRARY_PATH)/L1/simu/$(NUMBER_OF_READS)_$(MEAN_READ_LEN)_$(ERROR_RATE)_$$iter.sorted; \
@@ -231,7 +232,7 @@ $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).L1.count: $(OUTPUT_DIR)/$(SAMPLE_ID)/$(S
 ##
 ## Correcting the number of reads mapped to L1Hs
 ##	
-$(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).L1.count.corrected: $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).L1.count $(OUTPUT_DIR)/$(SAMPLE_ID)/L1.signatures.txt 
+$(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).L1.count.corrected: $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).L1.count $(eval MEAN_READ_LEN := $(shell cat $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).read_length)) $(OUTPUT_DIR)/$(SAMPLE_ID)/L1.signatures.txt
 	@echo -e "======================\n" >> $(LOG_FILE)
 	@echo -e "$(timestamp) $(PIPELINE_NAME): Correcting the number of reads on L1Hs:\n" >> $(LOG_FILE)
 	$(R_BIN) --no-restore --no-save --args $(OUTPUT_DIR)/$(SAMPLE_ID)/L1.signatures.txt $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).L1.count $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).sorted.bam.tot < $(LIBRARY_PATH)/L1/ref/lsei.template.r >> $(LOG_FILE)
@@ -254,7 +255,7 @@ $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).L1.count.corrected: $(OUTPUT_DIR)/$(SAMP
 ##
 ## SIMULATE reads from SVA if they do not exists
 ##
-$(LIBRARY_PATH)/SVA/$(NUMBER_OF_READS_SVA)_$(MEAN_READ_LEN)_$(ERROR_RATE).txt: | $(LIBRARY_PATH)/SVA/ref/SVA.ref.fa
+$(LIBRARY_PATH)/SVA/$(NUMBER_OF_READS_SVA)_$(MEAN_READ_LEN)_$(ERROR_RATE).txt: $(LIBRARY_PATH)/SVA/ref/SVA.ref.fa
 	@echo -e "======================\n" >> $(LOG_FILE)
 	@echo -e "$(timestamp) $(PIPELINE_NAME): The profile for this study was not found at: $(LIBRARY_PATH)/SVA/$(NUMBER_OF_READS_SVA)_$(MEAN_READ_LEN)_$(ERROR_RATE).txt\n" >> $(LOG_FILE)
 	@echo -e "$(timestamp) $(PIPELINE_NAME): Simulating reads with length equal to $(MEAN_READ_LEN)\n" >> $(LOG_FILE)
