@@ -33,6 +33,7 @@ ifeq ($(INPUT_FILE_ID),NULL)
   		MAIN_ORGANISM_GENOME_ID=[optional: defaults to 'hg38'] 
 endif
 
+$(eval MEAN_READ_LEN := $(shell $(COMMAND_CONVERT_INPUT) | head -n 40000 | awk '{if((NR+2)%4==0) {count++; sum+=length($$_)}} END{print sum/count}'))
 
 ## Define current time
 timestamp := `/bin/date "+%Y-%m-%d(%H:%M:%S)"`
@@ -68,6 +69,7 @@ $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).read_length: $(INPUT_FILE_PATH) | $(OUTP
 	@echo -e "$(timestamp) $(PIPELINE_NAME): Guessing read legth based on fastq sequences:\n" >> $(LOG_FILE)
 	$(eval MEAN_READ_LEN := $(shell $(COMMAND_CONVERT_INPUT) | head -n 40000 | awk '{if((NR+2)%4==0) {count++; sum+=length($$_)}} END{print sum/count}'))
 	echo "$(MEAN_READ_LEN)" > $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).read_length
+	export MEAN_READ_LEN
 #Why MEAN_READ_LEN is not being exported in the rules for simulation? 
 	@echo -e "$(timestamp) $(PIPELINE_NAME): Finished guessing read legth based on fastq sequences:\n" >> $(OUTPUT_DIR)/$(SAMPLE_ID).log
 
