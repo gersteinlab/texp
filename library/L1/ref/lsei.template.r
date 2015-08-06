@@ -5,6 +5,7 @@ args <- commandArgs(trailingOnly = TRUE)
 signature_file = args[1]
 l1sub_counts_file = args[2]
 total_reads_file = args[3]
+factor_tpm_file = args[4]
 #
 
 A = read.table(signature_file,header=T,row.names=1);   #Expected number of reads based Assuming background transcription and simulation of L1Hs transcript;
@@ -24,6 +25,7 @@ B.corrected = B*percentages$X
 ## Quantify L1Hs transcription
 ##
 tot = scan(total_reads_file)
+factor_tpm = scan(factor_tpm_file)
 length = 6000
 reads = B[1,1]
 l1hs_percent_signal = percentages$X[1]
@@ -31,6 +33,8 @@ l1hs_mismapping_percentage = A[1,1]
 corrected_L1Hs_reads = reads*l1hs_percent_signal*(1/l1hs_mismapping_percentage)
 rpkm = (reads*10^9)/(length*tot)
 rpkm.corrected = (corrected_L1Hs_reads*10^9)/(length*tot)
+tpm = (reads/length)*(1/factor_tpm)*10^6
+tpm.corrected = (corrected_L1Hs_reads/length)*(1/factor_tpm)*10^6
 
 ##
 ## Dump results into file
@@ -39,6 +43,8 @@ write.table(percentages$X,file=paste(l1sub_counts_file,"signal_proportions",sep=
 
 write(rpkm,file=paste(l1sub_counts_file,"rpkm",sep="."))
 write(rpkm.corrected,file=paste(l1sub_counts_file,"rpkm.corrected",sep="."))
+write(tpm,file=paste(l1sub_counts_file,"tpm",sep="."))
+write(tpm.corrected,file=paste(l1sub_counts_file,"tpm.corrected",sep="."))
 
 write.table(B.corrected,file=paste(l1sub_counts_file,"corrected",sep="."))
 
