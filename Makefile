@@ -34,7 +34,7 @@ ifeq ($(INPUT_FILE_ID),NULL)
 endif
 
 $(eval MEAN_READ_LEN := $(shell $(COMMAND_CONVERT_INPUT) | head -n 40000 | awk '{if((NR+2)%4==0) {count++; sum+=length($$_)}} END{print sum/count}'))
-
+LOG_FILE := $(OUTPUT_DIR)/$(SAMPLE_ID).log
 ## Define current time
 timestamp := `/bin/date "+%Y-%m-%d(%H:%M:%S)"`
 #$(eval MEAN_READ_LEN := $(shell cat $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).read_length))
