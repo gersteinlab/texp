@@ -41,12 +41,12 @@ colnames(rpkm.corrected)=c("RPKM")
 row.names(rpkm.corrected)=c("SVA_E","SVA_F")
 
 tpm = data.frame((reads/length)*(1/factor_tpm)*10^6)
-colnames(rpkm.corrected)=c("TPM")
-row.names(rpkm.corrected)=c("SVA_E","SVA_F")
+colnames(tpm)=c("TPM")
+row.names(tpm)=c("SVA_E","SVA_F")
 
 tpm.corrected = data.frame(t((corrected_sva_reads/length)*(1/factor_tpm)*10^6))
-colnames(rpkm.corrected)=c("TPM")
-row.names(rpkm.corrected)=c("SVA_E","SVA_F")
+colnames(tpm.corrected)=c("TPM")
+row.names(tpm.corrected)=c("SVA_E","SVA_F")
 
 ##
 ## Dump results into file
