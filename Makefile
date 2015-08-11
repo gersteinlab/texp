@@ -7,11 +7,6 @@ ifneq ($(SAMPLE_NAME),NULL)
 endif
 
 ##
-## Bowtie2 command to align reads to a Reference genome
-##
-COMMAND_MAP := $(BOWTIE_BIN) -p $(N_THREADS) $(BOWTIE_PARAMS) -x $(BOWTIE_INDEX) -U $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).filtered.fastq 2>> $(LOG_FILE) | $(SAMTOOLS_BIN) view -Sb - 2>> $(LOG_FILE) > $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).bam; $(SAMTOOLS_BIN) sort -@$(N_THREADS) $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).bam $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).sorted; rm -R $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).bam; 
-
-##
 ## Detect filetype and extract from SRA format if necessary
 ##
 COMMAND_CONVERT_INPUT := cat $(INPUT_FILE_PATH)
@@ -35,6 +30,15 @@ endif
 
 $(eval MEAN_READ_LEN := $(shell $(COMMAND_CONVERT_INPUT) | head -n 40000 | awk '{if((NR+2)%4==0) {count++; sum+=length($$_)}} END{print sum/count}'))
 LOG_FILE := $(OUTPUT_DIR)/$(SAMPLE_ID).log
+
+
+##
+## Bowtie2 command to align reads to a Reference genome
+##
+COMMAND_MAP := $(BOWTIE_BIN) -p $(N_THREADS) $(BOWTIE_PARAMS) -x $(BOWTIE_INDEX) -U $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).filtered.fastq 2>> $(LOG_FILE) | $(SAMTOOLS_BIN) view -Sb - 2>> $(LOG_FILE) > $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).bam; $(SAMTOOLS_BIN) sort -@$(N_THREADS) $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).bam $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).sorted; rm -R $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).bam; 
+
+
+
 ## Define current time
 timestamp := `/bin/date "+%Y-%m-%d(%H:%M:%S)"`
 #$(eval MEAN_READ_LEN := $(shell cat $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).read_length))
@@ -43,6 +47,7 @@ timestamp := `/bin/date "+%Y-%m-%d(%H:%M:%S)"`
 ##
 .PHONY: all 
 .DEFAULT: all
+.INTERMEDIATE: $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).filtered.fastq $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).sorted.bam
 
 all: processSample 
 
@@ -56,7 +61,7 @@ all: processSample
 ##
 ## Make results directory & Convert INPUT if necessary
 ##
-$(OUTPUT_DIR)/$(SAMPLE_ID): $(INPUT_FILE_PATH)
+$(OUTPUT_DIR)/$(SAMPLE_ID): | $(INPUT_FILE_PATH)
 	@echo -e "$(USAGE)"
 	mkdir -p $(OUTPUT_DIR)/$(SAMPLE_ID)
 	@echo -e "$(timestamp) $(PIPELINE_NAME): Created results dir: $(OUTPUT_DIR)/$(SAMPLE_ID)\n" >> $(LOG_FILE)
@@ -64,7 +69,7 @@ $(OUTPUT_DIR)/$(SAMPLE_ID): $(INPUT_FILE_PATH)
 ##
 ## Guess meanread length
 ##
-$(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).read_length: $(INPUT_FILE_PATH) | $(OUTPUT_DIR)/$(SAMPLE_ID)
+$(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).read_length: | $(INPUT_FILE_PATH) $(OUTPUT_DIR)/$(SAMPLE_ID)
 	@echo -e "======================\n" >> $(LOG_FILE)
 	@echo -e "$(timestamp) $(PIPELINE_NAME): Guessing read legth based on fastq sequences:\n" >> $(LOG_FILE)
 	$(eval MEAN_READ_LEN := $(shell $(COMMAND_CONVERT_INPUT) | head -n 40000 | awk '{if((NR+2)%4==0) {count++; sum+=length($$_)}} END{print sum/count}'))
