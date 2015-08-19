@@ -75,7 +75,6 @@ $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).read_length: | $(INPUT_FILE_PATH) $(OUTP
 	$(eval MEAN_READ_LEN := $(shell $(COMMAND_CONVERT_INPUT) | head -n 40000 | awk '{if((NR+2)%4==0) {count++; sum+=length($$_)}} END{print sum/count}'))
 	echo "$(MEAN_READ_LEN)" > $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).read_length
 	export MEAN_READ_LEN
-#Why MEAN_READ_LEN is not being exported in the rules for simulation? 
 	@echo -e "$(timestamp) $(PIPELINE_NAME): Finished guessing read legth based on fastq sequences:\n" >> $(LOG_FILE)
 
 ##
@@ -163,7 +162,7 @@ $(LIBRARY_PATH)/L1/$(NUMBER_OF_READS)_$(MEAN_READ_LEN)_$(ERROR_RATE).txt: $(LIBR
 	@echo -e "$(timestamp) $(PIPELINE_NAME): Simulating reads with length equal to $(MEAN_READ_LEN)\n" >> $(LOG_FILE)
 	@echo -e "$(timestamp) $(PIPELINE_NAME): Creating reads from based on L1 reference sequence:\n" >> $(LOG_FILE)
 
-	while test -d $(LIBRARY_PATH)/L1/$(NUMBER_OF_READS)_$(MEAN_READ_LEN)_$(ERROR_RATE).txt.lock; do sleep 1; @echo -e "$(timestamp) $(PIPELINE_NAME): Waiting for simulation to be done by another $(PIPELINE_NAME) instance :\n" >> $(LOG_FILE); done;
+	while test -d $(LIBRARY_PATH)/L1/$(NUMBER_OF_READS)_$(MEAN_READ_LEN)_$(ERROR_RATE).txt.lock; do sleep 1; @echo -e "$(timestamp) $(PIPELINE_NAME): Waiting for simulation to be done by another $(PIPELINE_NAME) instance :\n" >> $(LOG_FILE); done; \
 	touch $(LIBRARY_PATH)/L1/$(NUMBER_OF_READS)_$(MEAN_READ_LEN)_$(ERROR_RATE).txt.lock
 
 	mkdir -p $(LIBRARY_PATH)/L1/simu/
@@ -270,7 +269,7 @@ $(LIBRARY_PATH)/SVA/$(NUMBER_OF_READS_SVA)_$(MEAN_READ_LEN)_$(ERROR_RATE).txt: $
 	cat $(LIBRARY_PATH)/SVA/simu/$(NUMBER_OF_READS_SVA)_$(MEAN_READ_LEN)_$(ERROR_RATE)_*.sorted.bam.SVA_F.bed.count | sort -k2,2 | sed 's/^[ ]*//g' | awk 'BEGIN{first=1} {if ( first == 1 ) {id=$$2;first=0}; if ( id != $$2 ) {print id,sum/count;id=$$2;sum=0;count=0}; sum+=$$1;count++}; END{print id,sum/count;}' | sed 's/_Retroposon__SVA//g' > temp.SVA_F
 	paste temp.SVA_B temp.SVA_C temp.SVA_D temp.SVA_E temp.SVA_F | awk '{print $$1,$$2,$$4,$$6,$$8,$$10}' >> $(LIBRARY_PATH)/SVA/$(NUMBER_OF_READS_SVA)_$(MEAN_READ_LEN)_$(ERROR_RATE).txt
 	rm temp.SVA_B temp.SVA_C temp.SVA_D temp.SVA_E temp.SVA_F
-	
+
 	rm -Rf $(LIBRARY_PATH)/SVA/$(NUMBER_OF_READS_SVA)_$(MEAN_READ_LEN)_$(ERROR_RATE).txt.lock
 
 ##
@@ -341,11 +340,12 @@ $(LIBRARY_PATH)/LTR/$(NUMBER_OF_READS_LTR)_$(MEAN_READ_LEN)_$(ERROR_RATE).txt: $
 		$(SAMTOOLS_BIN) sort -@$(N_THREADS) -m 4G $(LIBRARY_PATH)/LTR/simu/$(NUMBER_OF_READS_LTR)_$(MEAN_READ_LEN)_$(ERROR_RATE)_$$iter.bam $(LIBRARY_PATH)/LTR/simu/$(NUMBER_OF_READS_LTR)_$(MEAN_READ_LEN)_$(ERROR_RATE)_$$iter.sorted; \
 		rm -R $(LIBRARY_PATH)/LTR/simu/$(NUMBER_OF_READS_LTR)_$(MEAN_READ_LEN)_$(ERROR_RATE)_$$iter.bam; \
 		$(INTERSERC_BIN) -f 0.75 -a $(LIBRARY_PATH)/LTR/simu/$(NUMBER_OF_READS_LTR)_$(MEAN_READ_LEN)_$(ERROR_RATE)_$$iter.sorted.bam -b $(LIBRARY_PATH)/LTR/ref/LTR.hg38.bed -sorted -bed -wo > $(LIBRARY_PATH)/LTR/simu/$(NUMBER_OF_READS_LTR)_$(MEAN_READ_LEN)_$(ERROR_RATE)_$$iter.sorted.bam.LTR.bed; \
-		cat $(LIBRARY_PATH)/LTR/simu/$(NUMBER_OF_READS_LTR)_$(MEAN_READ_LEN)_$(ERROR_RATE)_$$iter.sorted.bam.LTR.bed | awk '{print $$(NF-1)}' | sort | uniq -c > $(LIBRARY_PATH)/LTR/simu/$(NUMBER_OF_READS_LTR)_$(MEAN_READ_LEN)_$(ERROR_RATE)_$$iter.sorted.bam.LTR.bed.count; \
+		cat $(LIBRARY_PATH)/LTR/simu/$(NUMBER_OF_READS_LTR)_$(MEAN_READ_LEN)_$(ERROR_RATE)_$$iter.sorted.bam.LTR.bed | awk -F "[$$\t ]" '{print $$4,$$20}' | sort -k1,1 -k2,2 | uniq -c > $(LIBRARY_PATH)/LTR/simu/$(NUMBER_OF_READS_LTR)_$(MEAN_READ_LEN)_$(ERROR_RATE)_$$iter.sorted.bam.LTR.bed.count; \
 	done
 	@echo -e "$(timestamp) $(PIPELINE_NAME): Calculating the expected number of reads on each subfamily:\n" >> $(LOG_FILE)
-#	echo "LTR_Subfamily LTRHs_Transcript" > $(LIBRARY_PATH)/LTR/$(NUMBER_OF_READS_LTR)_$(MEAN_READ_LEN)_$(ERROR_RATE).txt
-#	cat $(LIBRARY_PATH)/LTR/simu/$(NUMBER_OF_READS_LTR)_$(MEAN_READ_LEN)_$(ERROR_RATE)_*.sorted.bam.LTR.bed.count | sort -k2,2 | sed 's/^[ ]*//g' | awk 'BEGIN{first=1} {if ( first == 1 ) {id=$$2;first=0}; if ( id != $$2 ) {print id,sum/count;id=$$2;sum=0;count=0}; sum+=$$1;count++}; END{print id,sum/count;}' | sed 's/_LINE__LTR//g' >> $(LIBRARY_PATH)/LTR/$(NUMBER_OF_READS)_$(MEAN_READ_LEN)_$(ERROR_RATE).txt
+	cat $(LIBRARY_PATH)/LTR/simu/$(NUMBER_OF_READS_LTR)_$(MEAN_READ_LEN)_$(ERROR_RATE)_*.sorted.bam.LTR.bed.count | sort -k2,2 -k3,3 | sed 's/^[ ]*//g' | awk 'BEGIN{first=1} {if ( first == 1 ) {id=$$2"*"$$3;first=0}; if ( id != $$2"*"$$3 ) {print id,sum/$(NUMBER_OF_LOOPS);id=$$2"*"$$3;sum=0;count=0}; sum+=$$1;count++}; END{print id,sum/$(NUMBER_OF_LOOPS);}' >> $(LIBRARY_PATH)/LTR/$(NUMBER_OF_READS)_$(MEAN_READ_LEN)_$(ERROR_RATE).txt
+
+	echo "LTR_Subfamily LTRHs_Transcript" > $(LIBRARY_PATH)/LTR/$(NUMBER_OF_READS_LTR)_$(MEAN_READ_LEN)_$(ERROR_RATE).txt
 
 
 ##
