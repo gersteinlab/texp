@@ -162,10 +162,8 @@ $(LIBRARY_PATH)/L1/$(NUMBER_OF_READS)_$(MEAN_READ_LEN)_$(ERROR_RATE).txt: $(LIBR
 	@echo -e "$(timestamp) $(PIPELINE_NAME): Simulating reads with length equal to $(MEAN_READ_LEN)\n" >> $(LOG_FILE)
 	@echo -e "$(timestamp) $(PIPELINE_NAME): Creating reads from based on L1 reference sequence:\n" >> $(LOG_FILE)
 
-    while test -a $(LIBRARY_PATH)/L1/$(NUMBER_OF_READS)_$(MEAN_READ_LEN)_$(ERROR_RATE).txt.lock; do echo "$(timestamp) $(PIPELINE_NAME)
-: Waiting for simulation to be done by another $(PIPELINE_NAME) instance..." >> $(LOG_FILE); sleep 15; done; \	
-
-	touch $(LIBRARY_PATH)/L1/$(NUMBER_OF_READS)_$(MEAN_READ_LEN)_$(ERROR_RATE).txt.lock
+#    while test -a $(LIBRARY_PATH)/L1/$(NUMBER_OF_READS)_$(MEAN_READ_LEN)_$(ERROR_RATE).txt.lock; do echo "$(timestamp) $(PIPELINE_NAME): Waiting for simulation to be done by another $(PIPELINE_NAME) instance..." >> $(LOG_FILE); sleep 15; done; \	
+#	touch $(LIBRARY_PATH)/L1/$(NUMBER_OF_READS)_$(MEAN_READ_LEN)_$(ERROR_RATE).txt.lock
 
 	mkdir -p $(LIBRARY_PATH)/L1/simu/
 	@for iter in $(shell seq 1 $(NUMBER_OF_LOOPS) ); do \
@@ -186,8 +184,7 @@ $(LIBRARY_PATH)/L1/$(NUMBER_OF_READS)_$(MEAN_READ_LEN)_$(ERROR_RATE).txt: $(LIBR
 	rm -Rf $(LIBRARY_PATH)/L1/$(NUMBER_OF_READS)_$(MEAN_READ_LEN)_$(ERROR_RATE).txt.lock
 
 $(LIBRARY_PATH)/L1/$(NUMBER_OF_READS)_$(MEAN_READ_LEN)_$(ERROR_RATE).txt.lock:
-    while test -a $(LIBRARY_PATH)/L1/$(NUMBER_OF_READS)_$(MEAN_READ_LEN)_$(ERROR_RATE).txt.lock; do echo "$(timestamp) $(PIPELINE_NAME)
-: Waiting for simulation to be done by another $(PIPELINE_NAME) instance..." >> $(LOG_FILE); sleep 15; done; \	
+    while test -a $(LIBRARY_PATH)/L1/$(NUMBER_OF_READS)_$(MEAN_READ_LEN)_$(ERROR_RATE).txt.lock; do echo "$(timestamp) $(PIPELINE_NAME): Waiting for simulation to be done by another $(PIPELINE_NAME) instance..." >> $(LOG_FILE); sleep 15; done; \	
 
 	touch $(LIBRARY_PATH)/L1/$(NUMBER_OF_READS)_$(MEAN_READ_LEN)_$(ERROR_RATE).txt.lock
 
