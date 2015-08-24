@@ -19,8 +19,7 @@ endif
 USAGE := 
 ifeq ($(INPUT_FILE_ID),NULL)
   USAGE := "make -f $PIPELINE_NAME 
-#  		INPUT_FILE_PATH=[required: absolute/path/to/input/.fa|.fq|.sra|.fa.gz] 
-  		INPUT_FILE_PATH=[required: absolute/path/to/input/.fastq] 
+  		INPUT_FILE_PATH=[required: absolute/path/to/input/.fa|.fq|.sra|.fa.gz] 
   		N_THREADS=[required: number of threads] 
   		OUTPUT_DIR=<required: absolute/path/to/output> 
   		INPUT_FILE_ID=[required: samplename] ADAPTER_SEQ=[optional: will guess sequence if not provided here; none, if already clipped input] 
@@ -359,18 +358,63 @@ endif
 		cat $(LIBRARY_PATH)/LTR/simu/$(NUMBER_OF_READS_LTR)_$(MEAN_READ_LEN)_$(ERROR_RATE)_$$iter.sorted.bam.LTR.bed | awk -F "[$$\t ]" '{print $$4,$$20}' | sort -k1,1 -k2,2 | uniq -c > $(LIBRARY_PATH)/LTR/simu/$(NUMBER_OF_READS_LTR)_$(MEAN_READ_LEN)_$(ERROR_RATE)_$$iter.sorted.bam.LTR.bed.count; \
 	done
 	@echo -e "$(timestamp) $(PIPELINE_NAME): Calculating the expected number of reads on each subfamily:\n" >> $(LOG_FILE)
-	cat $(LIBRARY_PATH)/LTR/simu/$(NUMBER_OF_READS_LTR)_$(MEAN_READ_LEN)_$(ERROR_RATE)_*.sorted.bam.LTR.bed.count | sort -k2,2 -k3,3 | sed 's/^[ ]*//g' | awk 'BEGIN{first=1} {if ( first == 1 ) {id=$$2"*"$$3;first=0}; if ( id != $$2"*"$$3 ) {print id,sum/$(NUMBER_OF_LOOPS);id=$$2"*"$$3;sum=0;count=0}; sum+=$$1;count++}; END{print id,sum/$(NUMBER_OF_LOOPS);}' >> $(LIBRARY_PATH)/LTR/$(NUMBER_OF_READS)_$(MEAN_READ_LEN)_$(ERROR_RATE).txt
-
-	echo "LTR_Subfamily LTRHs_Transcript" > $(LIBRARY_PATH)/LTR/$(NUMBER_OF_READS_LTR)_$(MEAN_READ_LEN)_$(ERROR_RATE).txt
+	cat $(LIBRARY_PATH)/LTR/simu/$(NUMBER_OF_READS_LTR)_$(MEAN_READ_LEN)_$(ERROR_RATE)_*.sorted.bam.LTR.bed.count | sort -k2,2 -k3,3 | sed 's/^[ ]*//g' | awk 'BEGIN{first=1} {if ( first == 1 ) {id=$$2"*"$$3;first=0}; if ( id != $$2"*"$$3 ) {print id,sum/$(NUMBER_OF_LOOPS);id=$$2"*"$$3;sum=0;count=0}; sum+=$$1;count++}; END{print id,sum/$(NUMBER_OF_LOOPS);}' > $(LIBRARY_PATH)/LTR/$(NUMBER_OF_READS)_$(MEAN_READ_LEN)_$(ERROR_RATE).means.txt
+	$(PYTHON_BIN) $(LIBRARY_PATH)/scripts/complete_table.py -1 $(LIBRARY_PATH)/LTR/ref/LTR.bases.ref -2 $(LIBRARY_PATH)/LTR/$(NUMBER_OF_READS)_$(MEAN_READ_LEN)_$(ERROR_RATE).means.txt > $(LIBRARY_PATH)/LTR/$(NUMBER_OF_READS_LTR)_$(MEAN_READ_LEN)_$(ERROR_RATE).txt
 
 	rm -Rf $(LIBRARY_PATH)/LTR/$(NUMBER_OF_READS_LTR)_$(MEAN_READ_LEN)_$(ERROR_RATE).txt.lock
+
+##
+## Create auxiliary file with proportion of simulated reads on each subfamily
+##
+$(LIBRARY_PATH)/LTR/$(NUMBER_OF_READS_LTR)_$(MEAN_READ_LEN)_$(ERROR_RATE).prop.txt: $(LIBRARY_PATH)/LTR/$(NUMBER_OF_READS_LTR)_$(MEAN_READ_LEN)_$(ERROR_RATE).txt
+	@echo -e "======================\n" >> $(LOG_FILE)
+	@echo -e "$(timestamp) $(PIPELINE_NAME): Calculating simulation proportions:\n" >> $(LOG_FILE)
+	echo -n "SVA_Subfamily " > $(LIBRARY_PATH)/LTR/$(NUMBER_OF_READS_LTR)_$(MEAN_READ_LEN)_$(ERROR_RATE).prop.txt
+	$(R_BIN) --no-restore --no-save --args $(LIBRARY_PATH)/LTR/$(NUMBER_OF_READS_LTR)_$(MEAN_READ_LEN)_$(ERROR_RATE).txt $(LIBRARY_PATH)/LTR/$(NUMBER_OF_READS_LTR)_$(MEAN_READ_LEN)_$(ERROR_RATE).prop.txt < $(LIBRARY_PATH)/SVA/ref/prop.template.r >> $(LOG_FILE)
+
+
+##
+## Create signature file
+##
+$(OUTPUT_DIR)/$(SAMPLE_ID)/LTR.signatures.txt: $(LIBRARY_PATH)/LTR/$(NUMBER_OF_READS_LTR)_$(MEAN_READ_LEN)_$(ERROR_RATE).prop.txt $(LIBRARY_PATH)/LTR/ref/LTR.bases.ref
+	@echo -e "======================\n" >> $(LOG_FILE)
+	@echo -e "$(timestamp) $(PIPELINE_NAME): Compiling SVA signature files:\n" >> $(LOG_FILE)
+	cat $(LIBRARY_PATH)/LTR/ref/LTR.bases.ref | awk '{print $$2}' > $(LIBRARY_PATH)/LTR/ref/LTR.bases.ref.tmp
+	paste $(LIBRARY_PATH)/LTR/$(NUMBER_OF_READS_LTR)_$(MEAN_READ_LEN)_$(ERROR_RATE).prop.txt $(LIBRARY_PATH)/LTR/ref/LTR.bases.ref.tmp | sed 's/[ \t][ \t]*/ /g' > $(OUTPUT_DIR)/$(SAMPLE_ID)/LTR.signatures.txt
+	rm -Rf $(LIBRARY_PATH)/LTR/ref/LTR.bases.ref.tmp
+
+
+##
+## Quantification of LTR repetitive element reads
+##
+$(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).LTR.count: $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).re.filtered.bed
+	@echo -e "======================\n" >> $(LOG_FILE)
+	@echo -e "$(timestamp) $(PIPELINE_NAME): Counting the number of reads on each LTR subfamily:\n" >> $(LOG_FILE)
+	echo "LTR_count LTR_Subfamily" > $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).LTR.count
+	cat $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).re.filtered.bed | grep "LTR" | awk '{print $$(NF-1)}' | sort | grep "^LTR" | uniq -c | sed 's/_LTR.*//g' >> $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).LTR.count
+	cat $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).LTR.count | awk '{print $$2,$$1}' > $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).LTR.count.t
+	mv $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).LTR.count.t $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).LTR.count 
+
+
+##
+## Correcting the number of reads mapped to LTR
+##	
+$(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).LTR.count.corrected: $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).LTR.count $(OUTPUT_DIR)/$(SAMPLE_ID)/LTR.signatures.txt $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).tpm.factor
+	@echo -e "======================\n" >> $(LOG_FILE)
+	@echo -e "$(timestamp) $(PIPELINE_NAME): Correcting the number of reads on LTR:\n" >> $(LOG_FILE)
+	$(R_BIN) --no-restore --no-save --args $(OUTPUT_DIR)/$(SAMPLE_ID)/LTR.signatures.txt $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).LTR.count $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).sorted.bam.tot $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).tpm.factor < $(LIBRARY_PATH)/LTR/ref/lsei.template.r >> $(LOG_FILE)
+	@echo -e "$(timestamp) $(PIPELINE_NAME): Writing LTR quantification files:" >> $(LOG_FILE)
+	@echo -e "$(timestamp) $(PIPELINE_NAME): - $(OUTPUT_DIR)/$(SAMPLE_ID)/LTR.signatures.txt $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).LTR.count.corrected" >> $(LOG_FILE)
+	@echo -e "$(timestamp) $(PIPELINE_NAME): - $(OUTPUT_DIR)/$(SAMPLE_ID)/LTR.signatures.txt $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).LTR.count.rpkm" >> $(LOG_FILE)
+	@echo -e "$(timestamp) $(PIPELINE_NAME): - $(OUTPUT_DIR)/$(SAMPLE_ID)/LTR.signatures.txt $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).LTR.count.rpkm.corrected" >> $(LOG_FILE)
+	@echo -e "$(timestamp) $(PIPELINE_NAME): - $(OUTPUT_DIR)/$(SAMPLE_ID)/LTR.signatures.txt $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).LTR.count.signal_proportions" >> $(LOG_FILE)
+
 
 ##
 ## Main sub-target
 ##
 #processSample: $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).L1.count.corrected $(LIBRARY_PATH)/SVA/$(NUMBER_OF_READS_SVA)_$(MEAN_READ_LEN)_$(ERROR_RATE).txt
-processSample: $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).L1.count.corrected $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).SVA.count.corrected
-#processSample: $(LIBRARY_PATH)/LTR/$(NUMBER_OF_READS_LTR)_$(MEAN_READ_LEN)_$(ERROR_RATE).txt
+processSample: $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).L1.count.corrected $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).SVA.count.corrected $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).LTR.count.corrected
 #	## Copy Output descriptions file
 #	#cp $(SRNABENCH_LIBS)/sRNAbenchOutputDescription.txt $(OUTPUT_DIR)/$(SAMPLE_ID)/sRNAbenchOutputDescription.txt 
 #	## END PIPELINE
