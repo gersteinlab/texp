@@ -28,10 +28,10 @@ ifeq ($(INPUT_FILE_ID),NULL)
 endif
 
 ifneq ("$(wildcard $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).read_length)","")
-@echo -e "$(timestamp) $(PIPELINE_NAME): Did not found $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).read_length \n" >> $(LOG_FILE)
+	@echo -e "$(timestamp) $(PIPELINE_NAME): Did not found $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).read_length \n" >> $(LOG_FILE)
 $(eval MEAN_READ_LEN := $(shell $(COMMAND_CONVERT_INPUT) | head -n 40000 | awk '{if((NR+2)%4==0) {count++; sum+=length($$_)}} END{print sum/count}'))
 else
-@echo -e "$(timestamp) $(PIPELINE_NAME): Found $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).read_length \n" >> $(LOG_FILE)
+	@echo -e "$(timestamp) $(PIPELINE_NAME): Found $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).read_length \n" >> $(LOG_FILE)
 $(eval MEAN_READ_LEN := $(shell cat $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).read_length)
 endif
 
