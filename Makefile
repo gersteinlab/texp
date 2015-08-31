@@ -28,7 +28,12 @@ ifeq ($(INPUT_FILE_ID),NULL)
   		MAIN_ORGANISM_GENOME_ID=[optional: defaults to 'hg38'] 
 endif
 
+ifneq ("$(wildcard $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).read_length)","")
 $(eval MEAN_READ_LEN := $(shell $(COMMAND_CONVERT_INPUT) | head -n 40000 | awk '{if((NR+2)%4==0) {count++; sum+=length($$_)}} END{print sum/count}'))
+else
+$(eval MEAN_READ_LEN := $(shell cat $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).read_length)
+endif
+
 LOG_FILE := $(OUTPUT_DIR)/$(SAMPLE_ID).log
 
 
@@ -41,7 +46,6 @@ COMMAND_MAP := $(BOWTIE_BIN) -p $(N_THREADS) $(BOWTIE_PARAMS) -x $(BOWTIE_INDEX)
 
 ## Define current time
 timestamp := `/bin/date "+%Y-%m-%d(%H:%M:%S)"`
-#SIMULATE_L1 = true
 
 ##
 ## Main make target
