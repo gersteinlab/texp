@@ -1,0 +1,12 @@
+options(echo=TRUE)
+args = commandArgs(trailingOnly = TRUE)
+
+input = args[1]
+count_bases = read.table(input);
+colnames(count_bases) = c("Subfamily","Count","Bases")
+
+library(ggplot2)
+pdf("./TEMPLATE/info/TEMPLATE_copies_bases.plot.pdf")
+ggplot()+geom_bar(data=count_bases,aes(x=Subfamily,y=Count),stat="identity")+theme(axis.text.x = element_text(angle = 90, hjust = 1))
+ggplot()+geom_bar(data=count_bases,aes(x=Subfamily,y=Bases),stat="identity")+theme(axis.text.x = element_text(angle = 90, hjust = 1))
+dev.off()

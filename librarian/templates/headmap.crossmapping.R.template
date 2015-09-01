@@ -1,0 +1,3 @@
+options(echo=TRUE)
+args <- commandArgs(trailingOnly = TRUE)
+
