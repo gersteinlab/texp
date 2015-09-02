@@ -12,7 +12,9 @@ A = read.table(signature_file,header=T,row.names=1);   #Expected number of reads
 #A = A[,c("LTR_Ref_bases","LTR5_Hs_Transcript","LTR7Y_Transcript","LTR7C_Transcript","LTR7Y_Transcript","LTR7C_Transcript","LTR7B_Transcript","LTR12C_Transcript")]
 incompatible_elements = match(NA, A$LTR5_Hs_Transcript)
 incompatible_elements_id = row.names(A[incompatible_elements,])
+if ( !is.na(incompatible_elements[1]) ){
 A=A[-incompatible_elements,,drop=FALSE]
+}
 A=A[order(row.names(A)),,drop=FALSE]
 A.scale=scale(A)
 
@@ -20,7 +22,9 @@ n_col_sig = ncol(A);
 B = read.table(ltrsub_counts_file,header=T,row.names=1);   #Number of reads on each L1 subfamily
 B2=merge(B,A,by=0,all=TRUE)[,1:2];B2[is.na(B2)]=0;rownames(B2)=B2[,1];B2$Row.names=NULL;B=B2
 B_incompatible_elements = match(incompatible_elements_id,rownames(B))
+if ( !is.na(B_incompatible_elements[1]) ){
 B=B[-B_incompatible_elements,,drop=FALSE]; 
+}
 B=B[order(row.names(B)),,drop=FALSE]
 B.scale = scale(B);
 F = 1                 #Sum of percentages has to be equal to 1
