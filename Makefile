@@ -27,13 +27,13 @@ ifeq ($(INPUT_FILE_ID),NULL)
   		MAIN_ORGANISM_GENOME_ID=[optional: defaults to 'hg38'] 
 endif
 
-ifneq ("$(wildcard $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).read_length)","")
-	@echo -e "$(timestamp) $(PIPELINE_NAME): Did not found $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).read_length \n" >> $(LOG_FILE)
+#ifneq ("$(wildcard $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).read_length)","")
+#	@echo -e "$(timestamp) $(PIPELINE_NAME): Did not found $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).read_length \n" >> $(LOG_FILE)
 $(eval MEAN_READ_LEN := $(shell $(COMMAND_CONVERT_INPUT) | head -n 40000 | awk '{if((NR+2)%4==0) {count++; sum+=length($$_)}} END{print sum/count}'))
-else
-	@echo -e "$(timestamp) $(PIPELINE_NAME): Found $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).read_length \n" >> $(LOG_FILE)
-$(eval MEAN_READ_LEN := $(shell cat $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).read_length)
-endif
+#else
+#	@echo -e "$(timestamp) $(PIPELINE_NAME): Found $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).read_length \n" >> $(LOG_FILE)
+#$(eval MEAN_READ_LEN := $(shell cat $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).read_length)
+#endif
 
 LOG_FILE := $(OUTPUT_DIR)/$(SAMPLE_ID).log
 
