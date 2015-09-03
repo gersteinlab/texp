@@ -8,10 +8,12 @@ total_reads_file = args[3]
 factor_tpm_file = args[4]
 #
 
-A = read.table(signature_file,header=T,row.names=1);   #Expected number of reads based Assuming background transcription and simulation of L1Hs transcript;
-incompatible_elements = match(NA, A[1,]) #TODO: Will this work?
+A = read.table(signature_file,header=T,row.names=1);   
+incompatible_elements = match(NA, A[,1])
 incompatible_elements_id = row.names(A[incompatible_elements,])
+if ( !is.na(incompatible_elements[1]) ){
 A=A[-incompatible_elements,,drop=FALSE]
+}
 A=A[order(row.names(A)),,drop=FALSE]
 A.scale=scale(A)
 
@@ -19,7 +21,9 @@ n_col_sig = ncol(A);
 B = read.table(TEMPLATEsub_counts_file,header=T,row.names=1);   #Number of reads on each L1 subfamily
 B2=merge(B,A,by=0,all=TRUE)[,1:2];B2[is.na(B2)]=0;rownames(B2)=B2[,1];B2$Row.names=NULL;B=B2
 B_incompatible_elements = match(incompatible_elements_id,rownames(B))
+if ( !is.na(B_incompatible_elements[1]) ){
 B=B[-B_incompatible_elements,,drop=FALSE]; 
+}
 B=B[order(row.names(B)),,drop=FALSE]
 B.scale = scale(B);
 F = 1                 #Sum of percentages has to be equal to 1
@@ -37,18 +41,35 @@ tot = scan(total_reads_file)
 factor_tpm = scan(factor_tpm_file)
 length = 1000
 reads = B
-TEMPLATE_percent_signal = percentages$X
-TEMPLATE_mismapping_percentage=data.frame(x=numeric(dim(reads)[1])-1); count=0; for (i in rownames(A)){ j=paste(sub("-",".",i),"_Transcript",sep=""); TEMPLATE_mismapping_percentage[count,]=A[i,j]; count=count+1}    
-corrected_TEMPLATE_reads = reads*(1/TEMPLATE_mismapping_percentage)*TEMPLATE_percent_signal
+TEMPLATE_percent_signal = percentages$X[1:(length(percentages$X)-1)]
+length_TEMPLATE = 0
 
-rpkm = data.frame((reads*10^9)/(length*tot))
+
+TEMPLATE_reads = data.frame(x=numeric(dim(B)[1]-1));
+corrected_TEMPLATE_reads = data.frame(x=numeric(dim(B)[1]-1));
+
+
+count=0; 
+for (i in rownames(A)) { 
+	j=paste(sub("-",".",i),"_Transcript",sep=""); 
+	if ( !is.na(B[i,]) &&  !is.null(A[i,j]) && !is.na(TEMPLATE_percent_signal[j]) ) {
+		TEMPLATE_reads[count,] =  B[i,]
+		corrected_TEMPLATE_reads[count,] = B[i,]*(1/A[i,j])*TEMPLATE_percent_signal[j]
+		rownames(corrected_TEMPLATE_reads)[count] = i
+		count=count+1;
+	}
+}
+TEMPLATE_reads = TEMPLATE_reads[1:count-1,,drop=FALSE]
+corrected_TEMPLATE_reads = corrected_TEMPLATE_reads[1:count-1,,drop=FALSE]
+
+rpkm = data.frame((TEMPLATE_reads*10^9)/(length*tot))
 colnames(rpkm)=c("RPKM")
 
 
 rpkm.corrected = data.frame((corrected_TEMPLATE_reads*10^9)/(length*tot))
 colnames(rpkm.corrected)=c("RPKM")
 
-tpm = data.frame((reads/length)*(1/factor_tpm)*10^6)
+tpm = data.frame((TEMPLATE_reads/length)*(1/factor_tpm)*10^6)
 colnames(tpm)=c("TPM")
 
 tpm.corrected = data.frame((corrected_TEMPLATE_reads/length)*(1/factor_tpm)*10^6)

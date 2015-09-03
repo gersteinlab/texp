@@ -1,3 +1,16 @@
 options(echo=TRUE)
 args <- commandArgs(trailingOnly = TRUE)
 
+input = args[1]
+miss = read.table(input);
+
+library(reshape2)
+miss.matrix=acast(miss,V1~V2,value.var="V3",fill=0)
+
+miss2=miss.matrix
+miss2=miss2[order(rownames(miss2)),]
+miss2=miss2[,order(colnames(miss2))]
+
+library(gplots)
+pdf("TEMPLATE/info/mismapping.pdf")
+heatmap.2(miss2/rowSums(miss2),trace="none",dendrogram="none",margin=c(5,7),col=topo.colors(100),cexCol=0.2,cexRow=0.2,Colv=FALSE,Rowv=FALSE)

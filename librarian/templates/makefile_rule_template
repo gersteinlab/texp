@@ -1,76 +1,75 @@
-$(LIBRARY_PATH)/LTR/$(NUMBER_OF_READS_LTR)_$(MEAN_READ_LEN)_$(ERROR_RATE).txt: $(LIBRARY_PATH)/LTR/ref/LTR.ref.fa
-ifneq ("$(wildcard $(LIBRARY_PATH)/LTR/$(NUMBER_OF_READS_LTR)_$(MEAN_READ_LEN)_$(ERROR_RATE).txt.lock)","")
+
+$(LIBRARY_PATH)/TEMPLATE/$(NUMBER_OF_READS)_$(MEAN_READ_LEN)_$(ERROR_RATE).txt: $(LIBRARY_PATH)/TEMPLATE/ref/TEMPLATE.ref.fa
+ifneq ("$(wildcard $(LIBRARY_PATH)/TEMPLATE/$(NUMBER_OF_READS)_$(MEAN_READ_LEN)_$(ERROR_RATE).txt.lock)","")
 	@echo -e "$(timestamp) $(PIPELINE_NAME): There is another simulation running. Exiting without finishing."
 	exit 1
 endif
 
-	touch $(LIBRARY_PATH)/LTR/$(NUMBER_OF_READS_LTR)_$(MEAN_READ_LEN)_$(ERROR_RATE).txt.lock
+	touch $(LIBRARY_PATH)/TEMPLATE/$(NUMBER_OF_READS)_$(MEAN_READ_LEN)_$(ERROR_RATE).txt.lock
 
 	@echo -e "======================\n" >> $(LOG_FILE)
-	@echo -e "$(timestamp) $(PIPELINE_NAME): The profile for this study was not found at: $(LIBRARY_PATH)/LTR/$(NUMBER_OF_READS_LTR)_$(MEAN_READ_LEN)_$(ERROR_RATE).txt\n" >> $(LOG_FILE)
+	@echo -e "$(timestamp) $(PIPELINE_NAME): The profile for this study was not found at: $(LIBRARY_PATH)/TEMPLATE/$(NUMBER_OF_READS)_$(MEAN_READ_LEN)_$(ERROR_RATE).txt\n" >> $(LOG_FILE)
 	@echo -e "$(timestamp) $(PIPELINE_NAME): Simulating reads with length equal to $(MEAN_READ_LEN)\n" >> $(LOG_FILE)
-	@echo -e "$(timestamp) $(PIPELINE_NAME): Creating reads from based on LTR reference sequence:\n" >> $(LOG_FILE)
-	mkdir -p $(LIBRARY_PATH)/LTR/simu/
+	@echo -e "$(timestamp) $(PIPELINE_NAME): Creating reads from based on TEMPLATE reference sequence:\n" >> $(LOG_FILE)
+	mkdir -p $(LIBRARY_PATH)/TEMPLATE/simu/
 	@for iter in $(shell seq 1 $(NUMBER_OF_LOOPS) ); do \
-		$(WGSIM_BIN) -S $$(date "+%N") -1 $(MEAN_READ_LEN) -N $(NUMBER_OF_READS_LTR) -d0 -r$(ERROR_RATE) -e 0 -R 0 $(LIBRARY_PATH)/LTR/ref/LTR.ref.fa $(LIBRARY_PATH)/LTR/simu/$(NUMBER_OF_READS_LTR)_$(MEAN_READ_LEN)_$(ERROR_RATE)_$$iter.simu /dev/null > /dev/null 2> /dev/null ; \
+		$(WGSIM_BIN) -S $$(date "+%N") -1 $(MEAN_READ_LEN) -N $(NUMBER_OF_READS) -d0 -r$(ERROR_RATE) -e 0 -R 0 $(LIBRARY_PATH)/TEMPLATE/ref/TEMPLATE.ref.fa $(LIBRARY_PATH)/TEMPLATE/simu/$(NUMBER_OF_READS)_$(MEAN_READ_LEN)_$(ERROR_RATE)_$$iter.simu /dev/null > /dev/null 2> /dev/null ; \
     done
 	@echo -e "$(timestamp) $(PIPELINE_NAME): Aligning simulated reads to the reference genome:\n" >> $(LOG_FILE)
 	@for iter in $(shell seq 1 $(NUMBER_OF_LOOPS) ); do \
-		$(BOWTIE_BIN) -p $(N_THREADS) $(BOWTIE_PARAMS) -x $(BOWTIE_INDEX) -U $(LIBRARY_PATH)/LTR/simu/$(NUMBER_OF_READS_LTR)_$(MEAN_READ_LEN)_$(ERROR_RATE)_$$iter.simu 2>> $(LOG_FILE) | $(SAMTOOLS_BIN) view -Sb - 2>> $(LOG_FILE) > $(LIBRARY_PATH)/LTR/simu/$(NUMBER_OF_READS_LTR)_$(MEAN_READ_LEN)_$(ERROR_RATE)_$$iter.bam; \
-		$(SAMTOOLS_BIN) sort -@$(N_THREADS) -m 4G $(LIBRARY_PATH)/LTR/simu/$(NUMBER_OF_READS_LTR)_$(MEAN_READ_LEN)_$(ERROR_RATE)_$$iter.bam $(LIBRARY_PATH)/LTR/simu/$(NUMBER_OF_READS_LTR)_$(MEAN_READ_LEN)_$(ERROR_RATE)_$$iter.sorted; \
-		rm -R $(LIBRARY_PATH)/LTR/simu/$(NUMBER_OF_READS_LTR)_$(MEAN_READ_LEN)_$(ERROR_RATE)_$$iter.bam; \
-		$(INTERSERC_BIN) -f 0.75 -a $(LIBRARY_PATH)/LTR/simu/$(NUMBER_OF_READS_LTR)_$(MEAN_READ_LEN)_$(ERROR_RATE)_$$iter.sorted.bam -b $(LIBRARY_PATH)/LTR/ref/LTR.hg38.bed -sorted -bed -wo > $(LIBRARY_PATH)/LTR/simu/$(NUMBER_OF_READS_LTR)_$(MEAN_READ_LEN)_$(ERROR_RATE)_$$iter.sorted.bam.LTR.bed; \
-		cat $(LIBRARY_PATH)/LTR/simu/$(NUMBER_OF_READS_LTR)_$(MEAN_READ_LEN)_$(ERROR_RATE)_$$iter.sorted.bam.LTR.bed | awk -F "[$$\t ]" '{print $$4,$$20}' | sort -k1,1 -k2,2 | uniq -c > $(LIBRARY_PATH)/LTR/simu/$(NUMBER_OF_READS_LTR)_$(MEAN_READ_LEN)_$(ERROR_RATE)_$$iter.sorted.bam.LTR.bed.count; \
+		$(BOWTIE_BIN) -p $(N_THREADS) $(BOWTIE_PARAMS) -x $(BOWTIE_INDEX) -U $(LIBRARY_PATH)/TEMPLATE/simu/$(NUMBER_OF_READS)_$(MEAN_READ_LEN)_$(ERROR_RATE)_$$iter.simu 2>> $(LOG_FILE) | $(SAMTOOLS_BIN) view -Sb - 2>> $(LOG_FILE) > $(LIBRARY_PATH)/TEMPLATE/simu/$(NUMBER_OF_READS)_$(MEAN_READ_LEN)_$(ERROR_RATE)_$$iter.bam; \
+		$(SAMTOOLS_BIN) sort -@$(N_THREADS) -m 4G $(LIBRARY_PATH)/TEMPLATE/simu/$(NUMBER_OF_READS)_$(MEAN_READ_LEN)_$(ERROR_RATE)_$$iter.bam $(LIBRARY_PATH)/TEMPLATE/simu/$(NUMBER_OF_READS)_$(MEAN_READ_LEN)_$(ERROR_RATE)_$$iter.sorted; \
+		rm -R $(LIBRARY_PATH)/TEMPLATE/simu/$(NUMBER_OF_READS)_$(MEAN_READ_LEN)_$(ERROR_RATE)_$$iter.bam; \
+		$(INTERSERC_BIN) -f 0.75 -a $(LIBRARY_PATH)/TEMPLATE/simu/$(NUMBER_OF_READS)_$(MEAN_READ_LEN)_$(ERROR_RATE)_$$iter.sorted.bam -b $(LIBRARY_PATH)/TEMPLATE/ref/TEMPLATE.bed -sorted -bed -wo > $(LIBRARY_PATH)/TEMPLATE/simu/$(NUMBER_OF_READS)_$(MEAN_READ_LEN)_$(ERROR_RATE)_$$iter.sorted.bam.TEMPLATE.bed; \
+		cat $(LIBRARY_PATH)/TEMPLATE/simu/$(NUMBER_OF_READS)_$(MEAN_READ_LEN)_$(ERROR_RATE)_$$iter.sorted.bam.TEMPLATE.bed | awk -F "[$$\t ]" '{print $$4,$$20}' | sort -k1,1 -k2,2 | uniq -c > $(LIBRARY_PATH)/TEMPLATE/simu/$(NUMBER_OF_READS)_$(MEAN_READ_LEN)_$(ERROR_RATE)_$$iter.sorted.bam.TEMPLATE.bed.count; \
 	done
 	@echo -e "$(timestamp) $(PIPELINE_NAME): Calculating the expected number of reads on each subfamily:\n" >> $(LOG_FILE)
-	cat $(LIBRARY_PATH)/LTR/simu/$(NUMBER_OF_READS_LTR)_$(MEAN_READ_LEN)_$(ERROR_RATE)_*.sorted.bam.LTR.bed.count | sort -k2,2 -k3,3 | sed 's/^[ ]*//g' | awk 'BEGIN{first=1} {if ( first == 1 ) {id=$$2"*"$$3;first=0}; if ( id != $$2"*"$$3 ) {print id,sum/$(NUMBER_OF_LOOPS);id=$$2"*"$$3;sum=0;count=0}; sum+=$$1;count++}; END{print id,sum/$(NUMBER_OF_LOOPS);}' > $(LIBRARY_PATH)/LTR/$(NUMBER_OF_READS)_$(MEAN_READ_LEN)_$(ERROR_RATE).means.txt
-	$(PYTHON_BIN) $(LIBRARY_PATH)/scripts/complete_table.py -1 $(LIBRARY_PATH)/LTR/ref/LTR.bases.ref -2 $(LIBRARY_PATH)/LTR/$(NUMBER_OF_READS)_$(MEAN_READ_LEN)_$(ERROR_RATE).means.txt > $(LIBRARY_PATH)/LTR/$(NUMBER_OF_READS_LTR)_$(MEAN_READ_LEN)_$(ERROR_RATE).txt
+	cat $(LIBRARY_PATH)/TEMPLATE/simu/$(NUMBER_OF_READS)_$(MEAN_READ_LEN)_$(ERROR_RATE)_*.sorted.bam.TEMPLATE.bed.count | sort -k2,2 -k3,3 | sed 's/^[ ]*//g' | awk 'BEGIN{first=1} {if ( first == 1 ) {id=$$2"*"$$3;first=0}; if ( id != $$2"*"$$3 ) {print id,sum/$(NUMBER_OF_LOOPS);id=$$2"*"$$3;sum=0;count=0}; sum+=$$1;count++}; END{print id,sum/$(NUMBER_OF_LOOPS);}' > $(LIBRARY_PATH)/TEMPLATE/$(NUMBER_OF_READS)_$(MEAN_READ_LEN)_$(ERROR_RATE).means.txt
+	$(PYTHON_BIN) $(LIBRARY_PATH)/scripts/complete_table.py -1 $(LIBRARY_PATH)/TEMPLATE/ref/TEMPLATE.bases.ref -2 $(LIBRARY_PATH)/TEMPLATE/$(NUMBER_OF_READS)_$(MEAN_READ_LEN)_$(ERROR_RATE).means.txt > $(LIBRARY_PATH)/TEMPLATE/$(NUMBER_OF_READS)_$(MEAN_READ_LEN)_$(ERROR_RATE).txt
 
-	rm -Rf $(LIBRARY_PATH)/LTR/$(NUMBER_OF_READS_LTR)_$(MEAN_READ_LEN)_$(ERROR_RATE).txt.lock
+	rm -Rf $(LIBRARY_PATH)/TEMPLATE/$(NUMBER_OF_READS)_$(MEAN_READ_LEN)_$(ERROR_RATE).txt.lock
 
 ##
 ## Create auxiliary file with proportion of simulated reads on each subfamily
 ##
-$(LIBRARY_PATH)/LTR/$(NUMBER_OF_READS_LTR)_$(MEAN_READ_LEN)_$(ERROR_RATE).prop.txt: $(LIBRARY_PATH)/LTR/$(NUMBER_OF_READS_LTR)_$(MEAN_READ_LEN)_$(ERROR_RATE).txt
+$(LIBRARY_PATH)/TEMPLATE/$(NUMBER_OF_READS)_$(MEAN_READ_LEN)_$(ERROR_RATE).prop.txt: $(LIBRARY_PATH)/TEMPLATE/$(NUMBER_OF_READS)_$(MEAN_READ_LEN)_$(ERROR_RATE).txt
 	@echo -e "======================\n" >> $(LOG_FILE)
 	@echo -e "$(timestamp) $(PIPELINE_NAME): Calculating simulation proportions:\n" >> $(LOG_FILE)
-	echo -n "SVA_Subfamily " > $(LIBRARY_PATH)/LTR/$(NUMBER_OF_READS_LTR)_$(MEAN_READ_LEN)_$(ERROR_RATE).prop.txt
-	$(R_BIN) --no-restore --no-save --args $(LIBRARY_PATH)/LTR/$(NUMBER_OF_READS_LTR)_$(MEAN_READ_LEN)_$(ERROR_RATE).txt $(LIBRARY_PATH)/LTR/$(NUMBER_OF_READS_LTR)_$(MEAN_READ_LEN)_$(ERROR_RATE).prop.txt < $(LIBRARY_PATH)/SVA/ref/prop.template.r >> $(LOG_FILE)
-
+	echo -n "TEMPLATE_Subfamily " > $(LIBRARY_PATH)/TEMPLATE/$(NUMBER_OF_READS)_$(MEAN_READ_LEN)_$(ERROR_RATE).prop.txt
+	$(R_BIN) --no-restore --no-save --args $(LIBRARY_PATH)/TEMPLATE/$(NUMBER_OF_READS)_$(MEAN_READ_LEN)_$(ERROR_RATE).txt $(LIBRARY_PATH)/TEMPLATE/$(NUMBER_OF_READS)_$(MEAN_READ_LEN)_$(ERROR_RATE).prop.txt < $(LIBRARY_PATH)/scripts/prop.template.r >> $(LOG_FILE)
 
 ##
 ## Create signature file
 ##
-$(OUTPUT_DIR)/$(SAMPLE_ID)/LTR.signatures.txt: $(LIBRARY_PATH)/LTR/$(NUMBER_OF_READS_LTR)_$(MEAN_READ_LEN)_$(ERROR_RATE).prop.txt $(LIBRARY_PATH)/LTR/ref/LTR.bases.ref
+$(OUTPUT_DIR)/$(SAMPLE_ID)/TEMPLATE.signatures.txt: $(LIBRARY_PATH)/TEMPLATE/$(NUMBER_OF_READS)_$(MEAN_READ_LEN)_$(ERROR_RATE).prop.txt $(LIBRARY_PATH)/TEMPLATE/ref/TEMPLATE.bases.ref
 	@echo -e "======================\n" >> $(LOG_FILE)
-	@echo -e "$(timestamp) $(PIPELINE_NAME): Compiling SVA signature files:\n" >> $(LOG_FILE)
-	cat $(LIBRARY_PATH)/LTR/ref/LTR.bases.ref | awk '{print $$2}' > $(LIBRARY_PATH)/LTR/ref/LTR.bases.ref.tmp
-	paste $(LIBRARY_PATH)/LTR/$(NUMBER_OF_READS_LTR)_$(MEAN_READ_LEN)_$(ERROR_RATE).prop.txt $(LIBRARY_PATH)/LTR/ref/LTR.bases.ref.tmp | sed 's/[ \t][ \t]*/ /g' > $(OUTPUT_DIR)/$(SAMPLE_ID)/LTR.signatures.txt
-	rm -Rf $(LIBRARY_PATH)/LTR/ref/LTR.bases.ref.tmp
+	@echo -e "$(timestamp) $(PIPELINE_NAME): Compiling TEMPLATE signature files:\n" >> $(LOG_FILE)
+	cat $(LIBRARY_PATH)/TEMPLATE/ref/TEMPLATE.bases.ref | awk '{print $$2}' > $(LIBRARY_PATH)/TEMPLATE/ref/TEMPLATE.bases.ref.tmp
+	paste $(LIBRARY_PATH)/TEMPLATE/$(NUMBER_OF_READS)_$(MEAN_READ_LEN)_$(ERROR_RATE).prop.txt $(LIBRARY_PATH)/TEMPLATE/ref/TEMPLATE.bases.ref.tmp | sed 's/[ \t][ \t]*/ /g' > $(OUTPUT_DIR)/$(SAMPLE_ID)/TEMPLATE.signatures.txt
+	rm -Rf $(LIBRARY_PATH)/TEMPLATE/ref/TEMPLATE.bases.ref.tmp
 
 
 ##
-## Quantification of LTR repetitive element reads
+## Quantification of TEMPLATE repetitive element reads
 ##
-$(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).LTR.count: $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).re.filtered.bed
+$(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).TEMPLATE.count: $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).re.filtered.bed $(LIBRARY_PATH)/TEMPLATE/$(NUMBER_OF_READS)_$(MEAN_READ_LEN)_$(ERROR_RATE).prop.txt
 	@echo -e "======================\n" >> $(LOG_FILE)
-	@echo -e "$(timestamp) $(PIPELINE_NAME): Counting the number of reads on each LTR subfamily:\n" >> $(LOG_FILE)
-	echo "LTR_count LTR_Subfamily" > $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).LTR.count
-	cat $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).re.filtered.bed | grep "LTR" | awk '{print $$(NF-1)}' | sort | grep "^LTR" | uniq -c | sed 's/_LTR.*//g' >> $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).LTR.count
-	cat $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).LTR.count | awk '{print $$2,$$1}' > $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).LTR.count.t
-	mv $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).LTR.count.t $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).LTR.count 
-
+	@echo -e "$(timestamp) $(PIPELINE_NAME): Counting the number of reads on each TEMPLATE subfamily:\n" >> $(LOG_FILE)
+	echo "TEMPLATE_count TEMPLATE_Subfamily" > $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).TEMPLATE.count
+	cat $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).re.filtered.bed | grep "TEMPLATE" | awk '{print $$(NF-1)}' | sort | uniq -c >> $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).TEMPLATE.count
+	cat $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).TEMPLATE.count | awk '{print $$2,$$1}' > $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).TEMPLATE.count.t
+	mv $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).TEMPLATE.count.t $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).TEMPLATE.count 
 
 ##
-## Correcting the number of reads mapped to LTR
+## Correcting the number of reads mapped to TEMPLATE
 ##	
-$(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).LTR.count.corrected: $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).LTR.count $(OUTPUT_DIR)/$(SAMPLE_ID)/LTR.signatures.txt $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).tpm.factor
+$(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).TEMPLATE.count.corrected: $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).TEMPLATE.count $(OUTPUT_DIR)/$(SAMPLE_ID)/TEMPLATE.signatures.txt $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).tpm.factor
 	@echo -e "======================\n" >> $(LOG_FILE)
-	@echo -e "$(timestamp) $(PIPELINE_NAME): Correcting the number of reads on LTR:\n" >> $(LOG_FILE)
-	$(R_BIN) --no-restore --no-save --args $(OUTPUT_DIR)/$(SAMPLE_ID)/LTR.signatures.txt $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).LTR.count $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).sorted.bam.tot $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).tpm.factor < $(LIBRARY_PATH)/LTR/ref/lsei.template.r >> $(LOG_FILE)
-	@echo -e "$(timestamp) $(PIPELINE_NAME): Writing LTR quantification files:" >> $(LOG_FILE)
-	@echo -e "$(timestamp) $(PIPELINE_NAME): - $(OUTPUT_DIR)/$(SAMPLE_ID)/LTR.signatures.txt $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).LTR.count.corrected" >> $(LOG_FILE)
-	@echo -e "$(timestamp) $(PIPELINE_NAME): - $(OUTPUT_DIR)/$(SAMPLE_ID)/LTR.signatures.txt $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).LTR.count.rpkm" >> $(LOG_FILE)
-	@echo -e "$(timestamp) $(PIPELINE_NAME): - $(OUTPUT_DIR)/$(SAMPLE_ID)/LTR.signatures.txt $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).LTR.count.rpkm.corrected" >> $(LOG_FILE)
-	@echo -e "$(timestamp) $(PIPELINE_NAME): - $(OUTPUT_DIR)/$(SAMPLE_ID)/LTR.signatures.txt $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).LTR.count.signal_proportions" >> $(LOG_FILE)
+	@echo -e "$(timestamp) $(PIPELINE_NAME): Correcting the number of reads on TEMPLATE:\n" >> $(LOG_FILE)
+	$(R_BIN) --no-restore --no-save --args $(OUTPUT_DIR)/$(SAMPLE_ID)/TEMPLATE.signatures.txt $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).TEMPLATE.count $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).sorted.bam.tot $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).tpm.factor < $(LIBRARY_PATH)/TEMPLATE/ref/lsei.template.r >> $(LOG_FILE)
+	@echo -e "$(timestamp) $(PIPELINE_NAME): Writing TEMPLATE quantification files:" >> $(LOG_FILE)
+	@echo -e "$(timestamp) $(PIPELINE_NAME): - $(OUTPUT_DIR)/$(SAMPLE_ID)/TEMPLATE.signatures.txt $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).TEMPLATE.count.corrected" >> $(LOG_FILE)
+	@echo -e "$(timestamp) $(PIPELINE_NAME): - $(OUTPUT_DIR)/$(SAMPLE_ID)/TEMPLATE.signatures.txt $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).TEMPLATE.count.rpkm" >> $(LOG_FILE)
+	@echo -e "$(timestamp) $(PIPELINE_NAME): - $(OUTPUT_DIR)/$(SAMPLE_ID)/TEMPLATE.signatures.txt $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).TEMPLATE.count.rpkm.corrected" >> $(LOG_FILE)
+	@echo -e "$(timestamp) $(PIPELINE_NAME): - $(OUTPUT_DIR)/$(SAMPLE_ID)/TEMPLATE.signatures.txt $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).TEMPLATE.count.signal_proportions" >> $(LOG_FILE)
 
