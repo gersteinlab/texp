@@ -44,13 +44,13 @@ length = 1000
 reads = B
 ltr_percent_signal = percentages$X[1:(length(percentages$X)-1)]
 length_ltr = 0
-for (i in rownames(A)) { 
-	if ( !is.na(B[i,]) &&  !is.null(A[i,j]) && !is.na(ltr_percent_signal[j]) ) {
-		length_ltr++;
-	}
-}
-ltr_reads = data.frame(x=numeric(length_ltr+1));
-corrected_ltr_reads = data.frame(x=numeric(length_ltr+1));
+#for (i in rownames(A)) { 
+#	if ( !is.na(B[i,]) &&  !is.null(A[i,j]) && !is.na(ltr_percent_signal[j]) ) {
+#		length_ltr = length_ltr+1;
+#	}
+#}
+ltr_reads = data.frame(x=numeric(dim(B)[1]-1));
+corrected_ltr_reads = data.frame(x=numeric(dim(B)[1]-1));
 #corrected_ltr_reads = data.frame();
 #ltr_mismapping_percentage = data.frame(x=numeric(dim(reads)[1]-1));
 #reads_fixed = data.frame(x=numeric(dim(reads)[1]-1)); 
@@ -68,7 +68,8 @@ for (i in rownames(A)) {
 		count=count+1;
 	}
 }
-
+ltr_reads = ltr_reads[1:count-1,,drop=FALSE]
+corrected_ltr_reads = corrected_ltr_reads[1:count-1,,drop=FALSE]
 rpkm = data.frame((ltr_reads*10^9)/(length*tot))
 colnames(rpkm)=c("RPKM")
 
