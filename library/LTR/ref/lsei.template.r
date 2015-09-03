@@ -42,18 +42,41 @@ tot = scan(total_reads_file)
 factor_tpm = scan(factor_tpm_file)
 length = 1000
 reads = B
-ltr_percent_signal = percentages$X
-ltr_mismapping_percentage=data.frame(x=numeric(dim(reads)[1])-1); count=0; for (i in rownames(A)){ j=paste(sub("-",".",i),"_Transcript",sep=""); ltr_mismapping_percentage[count,]=A[i,j]; count=count+1}    
-corrected_ltr_reads = reads*(1/ltr_mismapping_percentage)*ltr_percent_signal
+ltr_percent_signal = percentages$X[1:(length(percentages$X)-1)]
+length_ltr = 0
+for (i in rownames(A)) { 
+	if ( !is.na(B[i,]) &&  !is.null(A[i,j]) && !is.na(ltr_percent_signal[j]) ) {
+		length_ltr++;
+	}
+}
+ltr_reads = data.frame(x=numeric(length_ltr+1));
+corrected_ltr_reads = data.frame(x=numeric(length_ltr+1));
+#corrected_ltr_reads = data.frame();
+#ltr_mismapping_percentage = data.frame(x=numeric(dim(reads)[1]-1));
+#reads_fixed = data.frame(x=numeric(dim(reads)[1]-1)); 
 
-rpkm = data.frame((reads*10^9)/(length*tot))
+count=0; 
+for (i in rownames(A)) { 
+#	print(c(count,i)); 
+	j=paste(sub("-",".",i),"_Transcript",sep=""); 
+	if ( !is.na(B[i,]) &&  !is.null(A[i,j]) && !is.na(ltr_percent_signal[j]) ) {
+		ltr_reads[count,] =  B[i,]
+		corrected_ltr_reads[count,] = B[i,]*(1/A[i,j])*ltr_percent_signal[j]
+		rownames(corrected_ltr_reads)[count] = i
+#		reads_fixed[count,] = B[i,];
+#		ltr_mismapping_percentage[count,]=A[i,j]; 
+		count=count+1;
+	}
+}
+
+rpkm = data.frame((ltr_reads*10^9)/(length*tot))
 colnames(rpkm)=c("RPKM")
 
 
 rpkm.corrected = data.frame((corrected_ltr_reads*10^9)/(length*tot))
 colnames(rpkm.corrected)=c("RPKM")
 
-tpm = data.frame((reads/length)*(1/factor_tpm)*10^6)
+tpm = data.frame((ltr_reads/length)*(1/factor_tpm)*10^6)
 colnames(tpm)=c("TPM")
 
 tpm.corrected = data.frame((corrected_ltr_reads/length)*(1/factor_tpm)*10^6)
