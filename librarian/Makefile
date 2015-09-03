@@ -194,5 +194,7 @@ $(ELE_NAME)/info/heatmap.alignmentqual.pdf: $(ELE_NAME)/info/heatmap.alignmentqu
 $(ELE_NAME)/ref/$(ELE_NAME).makefile.sub: templates/makefile_rule_template
 	sed 's/TEMPLATE/$(ELE_NAME)/g' templates/makefile_rule_template > $(ELE_NAME)/ref/$(ELE_NAME).makefile.sub 
 
+$(ELE_NAME)/ref/$(ELE_NAME).lsei.R: templates/lsei.R.template
+	sed 's/TEMPLATE/$(ELE_NAME)/g' templates/lsei.R.template > $(ELE_NAME)/ref/$(ELE_NAME).lsei.R
 
-processElement: $(ELE_NAME)/ref/$(ELE_NAME).ref.bases $(ELE_NAME)/ref/$(ELE_NAME).ref.fa $(ELE_NAME)/info/copies_bases.plot.pdf $(ELE_NAME)/info/heatmap.alignmentqual.pdf $(ELE_NAME)/info/mismapping.pdf $(ELE_NAME)/ref/$(ELE_NAME).makefile.sub
+processElement: $(ELE_NAME)/ref/$(ELE_NAME).ref.bases $(ELE_NAME)/ref/$(ELE_NAME).ref.fa $(ELE_NAME)/info/copies_bases.plot.pdf $(ELE_NAME)/info/heatmap.alignmentqual.pdf $(ELE_NAME)/info/mismapping.pdf $(ELE_NAME)/ref/$(ELE_NAME).makefile.sub $(ELE_NAME)/ref/$(ELE_NAME).lsei.R
