@@ -56,7 +56,7 @@ $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).TEMPLATE.count: $(OUTPUT_DIR)/$(SAMPLE_I
 	@echo -e "======================\n" >> $(LOG_FILE)
 	@echo -e "$(timestamp) $(PIPELINE_NAME): Counting the number of reads on each TEMPLATE subfamily:\n" >> $(LOG_FILE)
 	echo "TEMPLATE_count TEMPLATE_Subfamily" > $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).TEMPLATE.count
-	cat $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).re.filtered.bed | grep "TEMPLATE" | awk '{print $$(NF-1)}' | sort | uniq -c >> $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).TEMPLATE.count
+	cat $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).re.filtered.bed | egrep -e "REGEX" | awk '{print $$(NF-1)}' | sort | uniq -c >> $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).TEMPLATE.count
 	cat $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).TEMPLATE.count | awk '{print $$2,$$1}' > $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).TEMPLATE.count.t
 	mv $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).TEMPLATE.count.t $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).TEMPLATE.count 
 
