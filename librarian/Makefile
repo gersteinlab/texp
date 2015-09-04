@@ -218,5 +218,5 @@ $(ELE_NAME)/ref/$(ELE_NAME).lsei.R: templates/lsei.R.template
 	sed 's/TEMPLATE/$(ELE_NAME)/g;s/TEMP_LENGTH/$(ELE_LENGTH)/g' templates/lsei.R.template > $(ELE_NAME)/ref/$(ELE_NAME).lsei.R
 
 
-create_ref: $(ELE_NAME)/ref/$(ELE_NAME).ref.bases $(ELE_NAME)/ref/$(ELE_NAME).makefile.sub $(ELE_NAME)/ref/$(ELE_NAME).lsei.R 
+create_ref: $(ELE_NAME)/ref/$(ELE_NAME).ref.bases $(ELE_NAME)/ref/$(ELE_NAME).ref.fa $(ELE_NAME)/ref/$(ELE_NAME).makefile.sub $(ELE_NAME)/ref/$(ELE_NAME).lsei.R
 create_plots: $(ELE_NAME)/info/copies_bases.plot.pdf $(ELE_NAME)/info/heatmap.alignmentqual.pdf $(ELE_NAME)/info/mismapping.pdf
