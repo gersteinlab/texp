@@ -8,7 +8,7 @@ total_reads_file = args[3]
 factor_tpm_file = args[4]
 #
 
-A=read.table(signature_file,header=T,row.names=1);   
+A=read.table(signature_file,header=T,row.names=1);  
 B=read.table(TEMPLATEsub_counts_file,header=T,row.names=1);   #Number of reads at each subfamily
 
 #Select/order elements common in the experiment and simulations
@@ -22,10 +22,11 @@ B2=merge(B,A,by=0,all=TRUE)[,1:3];
 B2=B2[complete.cases(B2),,drop=FALSE]
 B=B[B2$Row.names,,drop=FALSE]
 A=A[B2$Row.names,,drop=FALSE]
+A=A[,colSums(A)!=0] 
 
 #Prepare/Run lsei
 A.scale=scale(A,center=FALSE);
-A.scale[is.nan(A.scale)] = 0
+#A.scale[is.nan(A.scale)] = 0
 B.scale=scale(B,center=FALSE);
 
 n_col_sig = ncol(A); 
@@ -36,7 +37,7 @@ G = diag(n_col_sig)   #
 H = rep(0,n_col_sig)  # Gx >= H
 
 library(limSolve)
-percentages = lsei(A.scale,B.scale,E,F,G,H)
+percentages = lsei(A.scale,B.scale,E,F,G,H,type=2)
 #B.corrected = B*percentages$X
 
 ##
@@ -48,13 +49,15 @@ length = TEMP_LENGTH
 reads = B
 TEMPLATE_percent_signal = percentages$X[1:(length(percentages$X)-1)]
 
+#TO-DO: Should this be dim(colnames(A))?
 TEMPLATE_reads = data.frame(x=numeric(dim(B)[1]-1));
 corrected_TEMPLATE_reads = data.frame(x=numeric(dim(B)[1]-1));
 
 
 count=1; 
-for (i in rownames(A)) { 
-	j=paste(sub("-",".",i),"_Transcript",sep=""); 
+for (j in head(colnames(A),-1)) { 
+	i = gsub("_Transcript","",j)
+#	j=paste(sub("-",".",i),"_Transcript",sep=""); 
 	if ( !is.na(B[i,]) &&  !is.null(A[i,j]) && !is.na(TEMPLATE_percent_signal[j]) ) {
 		TEMPLATE_reads[count,] =  B[i,]
 		rownames(TEMPLATE_reads)[count] = i
@@ -71,7 +74,6 @@ for (i in rownames(A)) {
 
 rpkm = data.frame((TEMPLATE_reads*10^9)/(length*tot))
 colnames(rpkm)=c("RPKM")
-
 
 rpkm.corrected = data.frame((corrected_TEMPLATE_reads*10^9)/(length*tot))
 colnames(rpkm.corrected)=c("RPKM")

@@ -5,12 +5,13 @@ library(reshape2)
 library(gplots)
 
 input = args[1]
+output = args[2]
 count_quality = read.table(input);
 colnames(count_quality) = c("Count","Subfamily","Quality_bin")
 
 count_quality.matrix=acast(count_quality,Subfamily~Quality_bin,value.var="Count",fill=0)
 colnames(count_quality.matrix)=c("0-9","10-19","20-29","30-39","40-49")
 
-pdf("TEMPLATE/info/heatmap.alignmentqual.pdf")
+pdf(output)
 heatmap.2(count_quality.matrix/rowSums(count_quality.matrix),trace="none",dendrogram="none",margin=c(5,7),col=topo.colors(100),cexRow=0.4,Colv=FALSE)
 dev.off()
