@@ -215,10 +215,10 @@ $(OUTPUT)/$(ELE_NAME)/ref/$(ELE_NAME).makefile.sub: templates/makefile_rule_temp
 	sed 's/TEMPLATE/$(ELE_NAME)/g;s/REGEX/$(ELE_REGEX)/g' templates/makefile_rule_template > $(OUTPUT)/$(ELE_NAME)/ref/$(ELE_NAME).makefile.sub 
 
 ##
-## Create generic lsei script.
+## Create generic Mixed Membership Model script.
 ##
-$(OUTPUT)/$(ELE_NAME)/ref/$(ELE_NAME).lsei.R: templates/lsei.R.template
-	sed 's/TEMPLATE/$(ELE_NAME)/g;s/TEMP_LENGTH/$(ELE_LENGTH)/g' templates/lsei.R.template > $(OUTPUT)/$(ELE_NAME)/ref/$(ELE_NAME).lsei.R
+$(OUTPUT)/$(ELE_NAME)/ref/$(ELE_NAME).mixedMembership.R: templates/mixedMembership.R.template
+	sed 's/TEMPLATE/$(ELE_NAME)/g;s/TEMP_LENGTH/$(ELE_LENGTH)/g' templates/mixedMembership.R.template > $(OUTPUT)/$(ELE_NAME)/ref/$(ELE_NAME).mixedMembership.R
 
 
 create_ref: $(OUTPUT)/$(ELE_NAME)/ref/$(ELE_NAME).ref.bases $(OUTPUT)/$(ELE_NAME)/ref/$(ELE_NAME).ref.fa $(OUTPUT)/$(ELE_NAME)/ref/$(ELE_NAME).makefile.sub $(OUTPUT)/$(ELE_NAME)/ref/$(ELE_NAME).lsei.R
