@@ -221,5 +221,5 @@ $(OUTPUT)/$(ELE_NAME)/ref/$(ELE_NAME).mixedMembership.R: templates/mixedMembersh
 	sed 's/TEMPLATE/$(ELE_NAME)/g;s/TEMP_LENGTH/$(ELE_LENGTH)/g' templates/mixedMembership.R.template > $(OUTPUT)/$(ELE_NAME)/ref/$(ELE_NAME).mixedMembership.R
 
 
-create_ref: $(OUTPUT)/$(ELE_NAME)/ref/$(ELE_NAME).ref.bases $(OUTPUT)/$(ELE_NAME)/ref/$(ELE_NAME).ref.fa $(OUTPUT)/$(ELE_NAME)/ref/$(ELE_NAME).makefile.sub $(OUTPUT)/$(ELE_NAME)/ref/$(ELE_NAME).lsei.R
+create_ref: $(OUTPUT)/$(ELE_NAME)/ref/$(ELE_NAME).ref.bases $(OUTPUT)/$(ELE_NAME)/ref/$(ELE_NAME).ref.fa $(OUTPUT)/$(ELE_NAME)/ref/$(ELE_NAME).makefile.sub $(OUTPUT)/$(ELE_NAME)/ref/$(ELE_NAME).mixedMembership.R
 create_plots: $(OUTPUT)/$(ELE_NAME)/info/copies_bases.plot.pdf $(OUTPUT)/$(ELE_NAME)/info/heatmap.alignmentqual.pdf $(OUTPUT)/$(ELE_NAME)/info/mismapping.pdf
