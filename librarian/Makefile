@@ -86,13 +86,16 @@ $(OUTPUT)/$(ELE_NAME)/$(ELE_NAME).bed.elements: $(OUTPUT)/$(ELE_NAME)/ref/$(ELE_
 	@echo -e "$(timestamp) $(PIPELINE_NAME): ***         ***:" >> $(ELE_NAME).log
 
 ##
-## Calculate the proportion of bases for each element.
+## Count number of events and number of bases for each subfamily.
 ##
 $(OUTPUT)/$(ELE_NAME)/$(ELE_NAME).summary: $(OUTPUT)/$(ELE_NAME)/$(ELE_NAME).bed.elements
 	@echo -e "$(timestamp) $(PIPELINE_NAME): Creating element summary:" >> $(ELE_NAME).log
 	cat $(OUTPUT)/$(ELE_NAME)/ref/$(ELE_NAME).bed | sort -k4,4 | awk 'BEGIN{first=1} {if ( first == 1 ) {id=$$4;first=0}; if ( id != $$4 ) {print id,count,sum;id=$$4;sum=0;count=0}; sum+=($$3-$$2);count+=1}; END{print id,count,sum;}' | fgrep -w -f $(OUTPUT)/$(ELE_NAME)/$(ELE_NAME).bed.elements > $(OUTPUT)/$(ELE_NAME)/$(ELE_NAME).summary
 
-$(OUTPUT)/$(ELE_NAME)/ref/$(ELE_NAME).ref.bases: $(OUTPUT)/$(ELE_NAME)/$(ELE_NAME).bed.elements
+##
+## Calculate the proportion of bases for each subfamily.
+##
+$(OUTPUT)/$(ELE_NAME)/ref/$(ELE_NAME).ref.bases: $(OUTPUT)/$(ELE_NAME)/$(ELE_NAME).bed.elements $(OUTPUT)/$(ELE_NAME)/$(ELE_NAME).summary
 	@echo -e "$(timestamp) $(PIPELINE_NAME): Calculating the proportion of bases of each subfamily:" >> $(ELE_NAME).log
 	@echo -e "$(ELE_NAME)_Subfamily\t$(ELE_NAME)_Ref_bases" > $(OUTPUT)/$(ELE_NAME)/ref/$(ELE_NAME).ref.bases
 	SUM=$$(cat $(OUTPUT)/$(ELE_NAME)/$(ELE_NAME).summary | awk '{sum+=$$3} END{print sum}'); \
@@ -220,6 +223,11 @@ $(OUTPUT)/$(ELE_NAME)/ref/$(ELE_NAME).makefile.sub: templates/makefile_rule_temp
 $(OUTPUT)/$(ELE_NAME)/ref/$(ELE_NAME).mixedMembership.R: templates/mixedMembership.R.template
 	sed 's/TEMPLATE/$(ELE_NAME)/g;s/TEMP_LENGTH/$(ELE_LENGTH)/g' templates/mixedMembership.R.template > $(OUTPUT)/$(ELE_NAME)/ref/$(ELE_NAME).mixedMembership.R
 
+##
+## Create generic Ridge regression script.
+##
+$(OUTPUT)/$(ELE_NAME)/ref/$(ELE_NAME).ridge.R: templates/ridge.R.template
+	sed 's/TEMPLATE/$(ELE_NAME)/g;s/TEMP_LENGTH/$(ELE_LENGTH)/g' templates/ridge.R.template > $(OUTPUT)/$(ELE_NAME)/ref/$(ELE_NAME).ridge.R
 
-create_ref: $(OUTPUT)/$(ELE_NAME)/ref/$(ELE_NAME).ref.bases $(OUTPUT)/$(ELE_NAME)/ref/$(ELE_NAME).ref.fa $(OUTPUT)/$(ELE_NAME)/ref/$(ELE_NAME).makefile.sub $(OUTPUT)/$(ELE_NAME)/ref/$(ELE_NAME).mixedMembership.R
+create_ref: $(OUTPUT)/$(ELE_NAME)/$(ELE_NAME).summary $(OUTPUT)/$(ELE_NAME)/ref/$(ELE_NAME).ref.bases $(OUTPUT)/$(ELE_NAME)/ref/$(ELE_NAME).ref.fa $(OUTPUT)/$(ELE_NAME)/ref/$(ELE_NAME).makefile.sub $(OUTPUT)/$(ELE_NAME)/ref/$(ELE_NAME).mixedMembership.R $(OUTPUT)/$(ELE_NAME)/ref/$(ELE_NAME).ridge.R
 create_plots: $(OUTPUT)/$(ELE_NAME)/info/copies_bases.plot.pdf $(OUTPUT)/$(ELE_NAME)/info/heatmap.alignmentqual.pdf $(OUTPUT)/$(ELE_NAME)/info/mismapping.pdf

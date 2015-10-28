@@ -50,7 +50,7 @@ dist = rep("multinomial",J)
 dirichlet_parmeter = 0.1 #( 0 < x < 1 ), Where 0 is less certain about the priors and 1 is more certain about the priors.
 #Inialization of populations proportions. 
 alpha = rep(dirichlet_parmeter, K)
-#alpha[length(alpha)] = 1000*dirichlet_parmeter
+alpha[length(alpha)] = K*dirichlet_parmeter*8 #Mean of the initial dirichlet distribution of the last element (background) ~0.8 
 
 #Start theta using the sig.
 theta <- array(0, dim = c(J, K, max(Vj)))
@@ -75,7 +75,13 @@ for (i in t(counts)) {
 }
 
 initial=mixedMemModel(Total = Total, J = J, Rj = Rj, Nijr = Nijr, K = K, Vj = Vj, alpha = alpha, theta = theta, dist = dist, obs = obs)
-out = mmVarFit(initial, printStatus = 1, printMod = 25, stepType=0)
+print("-- Alpha")
+print(alpha)
+out = mmVarFit(initial, printStatus = 1, printMod = 25, stepType=0, maxAlphaIter=1000, maxEIter=10000,maxTotalIter=1000)
+print("--")
+print(out$alpha)
+print("-- End alpha") 
+
 
 TEMPLATE_reads = counts
 corrected_TEMPLATE_reads = t(out$phi)
