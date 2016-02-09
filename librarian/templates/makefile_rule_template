@@ -66,7 +66,7 @@ $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).TEMPLATE.count: $(OUTPUT_DIR)/$(SAMPLE_I
 $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).TEMPLATE.count.corrected: $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).TEMPLATE.count $(OUTPUT_DIR)/$(SAMPLE_ID)/TEMPLATE.signatures.txt $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).tpm.factor
 	@echo -e "======================\n" >> $(LOG_FILE)
 	@echo -e "$(timestamp) $(PIPELINE_NAME): Correcting the number of reads on TEMPLATE:\n" >> $(LOG_FILE)
-	$(R_BIN) --no-restore --no-save --args $(OUTPUT_DIR)/$(SAMPLE_ID)/TEMPLATE.signatures.txt $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).TEMPLATE.count $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).sorted.bam.tot $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).tpm.factor < $(LIBRARY_PATH)/TEMPLATE/ref/TEMPLATE.ridge.R >> $(LOG_FILE)
+	$(R_BIN) --no-restore --no-save --args $(OUTPUT_DIR)/$(SAMPLE_ID)/TEMPLATE.signatures.txt $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).TEMPLATE.count $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).sorted.bam.tot $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).tpm.factor < $(LIBRARY_PATH)/TEMPLATE/ref/TEMPLATE.lasso.R >> $(LOG_FILE)
 	@echo -e "$(timestamp) $(PIPELINE_NAME): Writing TEMPLATE quantification files:" >> $(LOG_FILE)
 	@echo -e "$(timestamp) $(PIPELINE_NAME): - $(OUTPUT_DIR)/$(SAMPLE_ID)/TEMPLATE.signatures.txt $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).TEMPLATE.count.corrected" >> $(LOG_FILE)
 	@echo -e "$(timestamp) $(PIPELINE_NAME): - $(OUTPUT_DIR)/$(SAMPLE_ID)/TEMPLATE.signatures.txt $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).TEMPLATE.count.rpkm" >> $(LOG_FILE)

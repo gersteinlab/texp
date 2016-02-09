@@ -229,5 +229,11 @@ $(OUTPUT)/$(ELE_NAME)/ref/$(ELE_NAME).mixedMembership.R: templates/mixedMembersh
 $(OUTPUT)/$(ELE_NAME)/ref/$(ELE_NAME).ridge.R: templates/ridge.R.template
 	sed 's/TEMPLATE/$(ELE_NAME)/g;s/TEMP_LENGTH/$(ELE_LENGTH)/g' templates/ridge.R.template > $(OUTPUT)/$(ELE_NAME)/ref/$(ELE_NAME).ridge.R
 
-create_ref: $(OUTPUT)/$(ELE_NAME)/$(ELE_NAME).summary $(OUTPUT)/$(ELE_NAME)/ref/$(ELE_NAME).ref.bases $(OUTPUT)/$(ELE_NAME)/ref/$(ELE_NAME).ref.fa $(OUTPUT)/$(ELE_NAME)/ref/$(ELE_NAME).makefile.sub $(OUTPUT)/$(ELE_NAME)/ref/$(ELE_NAME).mixedMembership.R $(OUTPUT)/$(ELE_NAME)/ref/$(ELE_NAME).ridge.R
+##
+## Create generic LASSO regression script.
+##
+$(OUTPUT)/$(ELE_NAME)/ref/$(ELE_NAME).lasso.R: templates/lasso.R.template
+	sed 's/TEMPLATE/$(ELE_NAME)/g;s/TEMP_LENGTH/$(ELE_LENGTH)/g' templates/lasso.R.template > $(OUTPUT)/$(ELE_NAME)/ref/$(ELE_NAME).lasso.R
+
+create_ref: $(OUTPUT)/$(ELE_NAME)/$(ELE_NAME).summary $(OUTPUT)/$(ELE_NAME)/ref/$(ELE_NAME).ref.bases $(OUTPUT)/$(ELE_NAME)/ref/$(ELE_NAME).ref.fa $(OUTPUT)/$(ELE_NAME)/ref/$(ELE_NAME).makefile.sub $(OUTPUT)/$(ELE_NAME)/ref/$(ELE_NAME).mixedMembership.R $(OUTPUT)/$(ELE_NAME)/ref/$(ELE_NAME).ridge.R $(OUTPUT)/$(ELE_NAME)/ref/$(ELE_NAME).lasso.R
 create_plots: $(OUTPUT)/$(ELE_NAME)/info/copies_bases.plot.pdf $(OUTPUT)/$(ELE_NAME)/info/heatmap.alignmentqual.pdf $(OUTPUT)/$(ELE_NAME)/info/mismapping.pdf
