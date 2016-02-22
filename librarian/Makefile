@@ -1,7 +1,7 @@
 PIPELINE_NAME     := TeXP_librarian
 
 LIBRARY_PATH     := /home2/fn64/projects/TeXP/library
-EXE_DIR          := /home2/fn64/tools/manual
+EXE_DIR          := ~/tools/manual/
 
 BOWTIE_BIN       := $(EXE_DIR)/bin/bowtie2
 BOWTIE_PARAMS    := --sensitive-local -N1 --no-unal
@@ -138,7 +138,7 @@ $(OUTPUT)/$(ELE_NAME)/simu/general.count: $(OUTPUT)/$(ELE_NAME)/ref/$(ELE_NAME).
 	@echo -e "$(timestamp) $(PIPELINE_NAME): Aligning simulated reads to the reference genome:\n" >> $(ELE_NAME).log
 	@for iter in $(shell seq 1 $(NUMBER_OF_LOOPS) ); do \
 		$(BOWTIE_BIN) -p 1 $(BOWTIE_PARAMS) -x $(BOWTIE_INDEX) -U $(OUTPUT)/$(ELE_NAME)/simu/$(NUMBER_OF_READS)_$(MEAN_READ_LEN)_$(ERROR_RATE)_$$iter.simu 2>> $(LOG_FILE) | $(SAMTOOLS_BIN) view -Sb - 2>> $(LOG_FILE) > $(OUTPUT)/$(ELE_NAME)/simu/$(NUMBER_OF_READS)_$(MEAN_READ_LEN)_$(ERROR_RATE)_$$iter.simu.bam; \
-		$(SAMTOOLS_BIN) sort -@1 -m 4G $(OUTPUT)/$(ELE_NAME)/simu/$(NUMBER_OF_READS)_$(MEAN_READ_LEN)_$(ERROR_RATE)_$$iter.simu.bam $(OUTPUT)/$(ELE_NAME)/simu/$(NUMBER_OF_READS)_$(MEAN_READ_LEN)_$(ERROR_RATE)_$$iter.simu.sorted; \
+		$(SAMTOOLS_BIN) sort -@1 -m 4G $(OUTPUT)/$(ELE_NAME)/simu/$(NUMBER_OF_READS)_$(MEAN_READ_LEN)_$(ERROR_RATE)_$$iter.simu.bam -o $(OUTPUT)/$(ELE_NAME)/simu/$(NUMBER_OF_READS)_$(MEAN_READ_LEN)_$(ERROR_RATE)_$$iter.simu.sorted; \
 		rm -R $(OUTPUT)/$(ELE_NAME)/simu/$(NUMBER_OF_READS)_$(MEAN_READ_LEN)_$(ERROR_RATE)_$$iter.simu.bam; \
 		$(BEDTOOLS_BIN) intersect -f 0.75 -a $(OUTPUT)/$(ELE_NAME)/simu/$(NUMBER_OF_READS)_$(MEAN_READ_LEN)_$(ERROR_RATE)_$$iter.simu.sorted.bam -b $(OUTPUT)/$(ELE_NAME)/ref/$(ELE_NAME).bed -sorted -bed -wo > $(OUTPUT)/$(ELE_NAME)/simu/$(NUMBER_OF_READS)_$(MEAN_READ_LEN)_$(ERROR_RATE)_$$iter.simu.sorted.bam.bed; \
 		cat $(OUTPUT)/$(ELE_NAME)/simu/$(NUMBER_OF_READS)_$(MEAN_READ_LEN)_$(ERROR_RATE)_$$iter.simu.sorted.bam.bed | awk -F "[$$\t ]" '{print $$4,$$(NF-1)}' | sed 's/_[0-9]*_[0-9]*_[0-9]*[:][0-9]*[:][0-9]*_[0-9]*[:][0-9]*[:][0-9]*[_][0-9a-z]*[/][12]//g' | sort -k1,1 -k2,2 | uniq -c > $(OUTPUT)/$(ELE_NAME)/simu/$(NUMBER_OF_READS)_$(MEAN_READ_LEN)_$(ERROR_RATE)_$$iter.simu.sorted.bam.bed.tmpcount; \

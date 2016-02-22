@@ -42,7 +42,7 @@ LOG_FILE := $(OUTPUT_DIR)/$(SAMPLE_ID).log
 ##
 ## Bowtie2 command to align reads to a Reference genome
 ##
-COMMAND_MAP := $(BOWTIE_BIN) -p $(N_THREADS) $(BOWTIE_PARAMS) -x $(BOWTIE_INDEX) -U $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).filtered.fastq 2>> $(LOG_FILE) | $(SAMTOOLS_BIN) view -Sb - 2>> $(LOG_FILE) > $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).bam; $(SAMTOOLS_BIN) sort -@$(N_THREADS) $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).bam $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).sorted; rm -R $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).bam; 
+COMMAND_MAP := $(BOWTIE_BIN) -p $(N_THREADS) $(BOWTIE_PARAMS) -x $(BOWTIE_INDEX) -U $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).filtered.fastq 2>> $(LOG_FILE) | $(SAMTOOLS_BIN) view -Sb - 2>> $(LOG_FILE) > $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).bam; $(SAMTOOLS_BIN) sort -@$(N_THREADS) $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).bam -o $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).sorted.bam; rm -R $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).bam; 
 
 
 
@@ -138,10 +138,10 @@ $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).re.filtered.bed: $(OUTPUT_DIR)/$(SAMPLE_
 $(OUTPUT_DIR)/$(SAMPLE_ID)/transcripts_quantification/abundance.txt: $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).filtered.fastq
 	@echo -e "======================\n" >> $(LOG_FILE)
 	@echo -e "$(timestamp) $(PIPELINE_NAME): Fast quantify transcripts with Kallisto:\n" >> $(LOG_FILE)
-	$(KALLISTO_BIN) quant -i $(KALLISTO_INDEX) -o $(OUTPUT_DIR)/$(SAMPLE_ID)/transcripts_quantification --single -l 50 --plaintext $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).filtered.fastq
+	$(KALLISTO_BIN) quant -i $(KALLISTO_INDEX) -o $(OUTPUT_DIR)/$(SAMPLE_ID)/transcripts_quantification --single -l $(MEAN_READ_LEN)  --plaintext $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).filtered.fastq
 
 ##
-## Transcript count factor (for TPM quantification)
+## Transcript count factor -- for TPM quantification
 ##
 $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).tpm.factor: $(OUTPUT_DIR)/$(SAMPLE_ID)/transcripts_quantification/abundance.txt
 	@echo -e "======================\n" >> $(LOG_FILE)
@@ -149,10 +149,10 @@ $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).tpm.factor: $(OUTPUT_DIR)/$(SAMPLE_ID)/t
 	cat $(OUTPUT_DIR)/$(SAMPLE_ID)/transcripts_quantification/abundance.txt | grep -v "eff_length" | awk '{a+=$$4/$$3} END{print a}' > $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).tpm.factor
 
 include library/L1HS_hg38/ref/L1HS_hg38.makefile.sub
-#include library/HERV_hg38/ref/HERV_hg38.makefile.sub
-#include library/LINE2_hg38/ref/LINE2_hg38.makefile.sub
-#include library/LTR_hg38/ref/LTR_hg38.makefile.sub
-#include library/SVA_hg38/ref/SVA_hg38.makefile.sub
+include library/HERV_hg38/ref/HERV_hg38.makefile.sub
+include library/LINE2_hg38/ref/LINE2_hg38.makefile.sub
+include library/LTR_hg38/ref/LTR_hg38.makefile.sub
+include library/SVA_hg38/ref/SVA_hg38.makefile.sub
 
 ##
 ## Main sub-target
@@ -161,7 +161,10 @@ include library/L1HS_hg38/ref/L1HS_hg38.makefile.sub
 #processSample: $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).L1HS_hg38.count.corrected $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).HERV_hg38.count.corrected $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).LINE2_hg38.count.corrected $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).SVA_hg38.count.corrected 
 #processSample: $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).LTR_hg38.count.corrected
 #!!!!!-----ALL REs:-----!!!!! processSample: $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).L1HS_hg38.count.corrected $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).HERV_hg38.count.corrected $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).LINE2_hg38.count.corrected $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).LTR_hg38.count.corrected $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).SVA_hg38.count.corrected 
-processSample: $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).L1HS_hg38.count.corrected
+processSample: $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).L1HS_hg38.count.corrected $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).HERV_hg38.count.corrected $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).LINE2_hg38.count.corrected $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).SVA_hg38.count.corrected $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).LTR_hg38.count.corrected
+#processSample: $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).L1HS_hg38.count.corrected $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).HERV_hg38.count.corrected $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).LINE2_hg38.count.corrected $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).SVA_hg38.count.corrected 
+#processSample: $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).HERV_hg38.count.corrected $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).SVA_hg38.count.corrected 
+#processSample: $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).LTR_hg38.count.corrected
 #	## Copy Output descriptions file
 #	#cp $(SRNABENCH_LIBS)/sRNAbenchOutputDescription.txt $(OUTPUT_DIR)/$(SAMPLE_ID)/sRNAbenchOutputDescription.txt 
 #	## END PIPELINE
