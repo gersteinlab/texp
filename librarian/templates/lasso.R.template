@@ -44,6 +44,7 @@ length = TEMP_LENGTH
 ##
 
 #TEMPLATE_reads = TEMPLATE_reads[1:dim(TEMPLATE_reads)[1]-1,,drop=FALSE]
+corrected_TEMPLATE_reads.back = corrected_TEMPLATE_reads
 corrected_TEMPLATE_reads = corrected_TEMPLATE_reads[1:nrow(corrected_TEMPLATE_reads)-1,,drop=FALSE]
 
 rpkm = data.frame((TEMPLATE_reads*10^9)/(length*tot))
@@ -68,5 +69,5 @@ write.table(rpkm.corrected,file=paste(TEMPLATEsub_counts_file,"rpkm.corrected",s
 write.table(tpm,file=paste(TEMPLATEsub_counts_file,"tpm",sep="."),quote=F)
 write.table(tpm.corrected,file=paste(TEMPLATEsub_counts_file,"tpm.corrected",sep="."),quote=F)
 
-write.table(corrected_TEMPLATE_reads,file=paste(TEMPLATEsub_counts_file,"corrected",sep="."))
+write.table(corrected_TEMPLATE_reads.back,file=paste(TEMPLATEsub_counts_file,"corrected",sep="."))
 
