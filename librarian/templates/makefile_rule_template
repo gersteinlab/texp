@@ -44,11 +44,11 @@ $(LIBRARY_PATH)/TEMPLATE/$(NUMBER_OF_READS)_$(MEAN_READ_LEN)_$(ERROR_RATE).prop.
 $(OUTPUT_DIR)/$(SAMPLE_ID)/TEMPLATE.signatures.txt: $(LIBRARY_PATH)/TEMPLATE/$(NUMBER_OF_READS)_$(MEAN_READ_LEN)_$(ERROR_RATE).prop.txt $(LIBRARY_PATH)/TEMPLATE/ref/TEMPLATE.ref.bases
 	@echo -e "======================\n" >> $(LOG_FILE)
 	@echo -e "$(timestamp) $(PIPELINE_NAME): Compiling TEMPLATE signature files:\n" >> $(LOG_FILE)
-	cat $(LIBRARY_PATH)/TEMPLATE/ref/TEMPLATE.ref.bases $(LIBRARY_PATH)/TEMPLATE/$(NUMBER_OF_READS)_$(MEAN_READ_LEN)_$(ERROR_RATE).prop.txt | awk '{print $$1}' | sort -V | uniq -d  > $(LIBRARY_PATH)/TEMPLATE/ref/TEMPLATE.commonelements.tmp 
-	echo "Ref_bases" >> $(LIBRARY_PATH)/TEMPLATE/ref/TEMPLATE.commonelements.tmp
-	cat $(LIBRARY_PATH)/TEMPLATE/ref/TEMPLATE.ref.bases | fgrep -w -f $(LIBRARY_PATH)/TEMPLATE/ref/TEMPLATE.commonelements.tmp | awk '{print $$2}' > $(LIBRARY_PATH)/TEMPLATE/ref/TEMPLATE.bases.ref.tmp
-	paste $(LIBRARY_PATH)/TEMPLATE/$(NUMBER_OF_READS)_$(MEAN_READ_LEN)_$(ERROR_RATE).prop.txt $(LIBRARY_PATH)/TEMPLATE/ref/TEMPLATE.bases.ref.tmp | sed 's/[ \t][ \t]*/ /g' > $(OUTPUT_DIR)/$(SAMPLE_ID)/TEMPLATE.signatures.txt
-	rm -Rf $(LIBRARY_PATH)/TEMPLATE/ref/TEMPLATE.bases.ref.tmp
+	cat $(LIBRARY_PATH)/TEMPLATE/ref/TEMPLATE.ref.bases $(LIBRARY_PATH)/TEMPLATE/$(NUMBER_OF_READS)_$(MEAN_READ_LEN)_$(ERROR_RATE).prop.txt | awk '{print $$1}' | sort -V | uniq -d  > $(OUTPUT_DIR)/$(SAMPLE_ID)//TEMPLATE.commonelements.tmp 
+	echo "Ref_bases" >> $(OUTPUT_DIR)/$(SAMPLE_ID)/TEMPLATE.commonelements.tmp
+	cat $(LIBRARY_PATH)/TEMPLATE/ref/TEMPLATE.ref.bases | fgrep -w -f $(OUTPUT_DIR)/$(SAMPLE_ID)/TEMPLATE.commonelements.tmp | awk '{print $$2}' > $(OUTPUT_DIR)/$(SAMPLE_ID)/TEMPLATE.bases.ref.tmp
+	paste $(LIBRARY_PATH)/TEMPLATE/$(NUMBER_OF_READS)_$(MEAN_READ_LEN)_$(ERROR_RATE).prop.txt $(OUTPUT_DIR)/$(SAMPLE_ID)/TEMPLATE.bases.ref.tmp | sed 's/[ \t][ \t]*/ /g' > $(OUTPUT_DIR)/$(SAMPLE_ID)/TEMPLATE.signatures.txt
+	rm -Rf $(OUTPUT_DIR)/$(SAMPLE_ID)/TEMPLATE.bases.ref.tmp $(OUTPUT_DIR)/$(SAMPLE_ID)/TEMPLATE.commonelements.tmp
 
 
 ##
