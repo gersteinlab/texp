@@ -7,6 +7,7 @@ TEMPLATEsub_counts_file = args[2]
 total_reads_file = args[3]
 factor_tpm_file = args[4]
 #
+length = TEMP_LENGTH
 
 A=read.table(sig_file,header=T,row.names=1);  
 B=read.table(TEMPLATEsub_counts_file,header=T,row.names=1);   #Number of reads at each subfamily
@@ -23,6 +24,7 @@ B2=B2[complete.cases(B2),,drop=FALSE]
 B=B[B2$Row.names,,drop=FALSE]
 A=A[B2$Row.names,,drop=FALSE]
 
+if ( sum(B/length>=5) != 0 ) { 
 n_col_sig = ncol(A); 
 library(penalized)
 profile_lambda1=profL1(B[,1],penalized=A,unpenalized=~0,lambda2=0,positive=TRUE,standardize=TRUE,plot=TRUE,minsteps=10000,maxiter=1000);
@@ -37,7 +39,6 @@ colnames(corrected_TEMPLATE_reads) = c("reads")
 
 tot = scan(total_reads_file)
 factor_tpm = scan(factor_tpm_file)
-length = TEMP_LENGTH
 
 ##
 ## Quantify element transcription
@@ -70,4 +71,6 @@ write.table(tpm,file=paste(TEMPLATEsub_counts_file,"tpm",sep="."),quote=F)
 write.table(tpm.corrected,file=paste(TEMPLATEsub_counts_file,"tpm.corrected",sep="."),quote=F)
 
 write.table(corrected_TEMPLATE_reads.back,file=paste(TEMPLATEsub_counts_file,"corrected",sep="."))
-
+} else {
+message("Not enough reads in TEMPLATE elements to perform the correction\n",appendLF=FALSE)
+}
