@@ -27,7 +27,7 @@ A=A[B2$Row.names,,drop=FALSE]
 if ( sum(B/length>=0.4) != 0 ) { 
 n_col_sig = ncol(A); 
 library(penalized)
-profile_lambda1=profL1(B[,1],penalized=A,unpenalized=~0,lambda2=0,positive=TRUE,standardize=TRUE,plot=TRUE,minsteps=10000,maxiter=1000);
+profile_lambda1=profL1(B[,1],penalized=A,unpenalized=~0,lambda2=0,positive=TRUE,standardize=TRUE,plot=FALSE,minsteps=10000,maxiter=1000);
 optimized_lambda1=optL1(B[,1],penalized=A,unpenalized=~0,lambda2=0,positive=TRUE,standardize=TRUE,fold=profile_lambda1$fold,maxiter=1000);
 
 percentages = coefficients(optimized_lambda1$fullfit,"all")/sum(coefficients(optimized_lambda1$fullfit,"all"))
