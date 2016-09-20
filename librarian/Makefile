@@ -13,10 +13,6 @@ BEDTOOLS_BIN     := $(EXE_DIR)/bin/bedtools
 WGSIM_BIN        := $(EXE_DIR)/bin/wgsim
 PYTHON_BIN       := /usr/bin/python
 
-#REPEAT_MASKER_OUT     := 
-#REPEAT_MASKER_BED     := ~/projects/hg38.rep.noexon.bed
-#REPEAT_MASKER_TOT_BED := ~/projects/hg38.rep.bed
-
 ##
 ## Simulation parameters
 ##
