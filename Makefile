@@ -152,16 +152,17 @@ $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).tpm.factor: $(OUTPUT_DIR)/$(SAMPLE_ID)/t
 
 
 include library/L1HS_hg38/ref/L1HS_hg38.makefile.sub
-include library/HERV_hg38/ref/HERV_hg38.makefile.sub
-include library/LINE2_hg38/ref/LINE2_hg38.makefile.sub
-include library/LTR_hg38/ref/LTR_hg38.makefile.sub
-include library/SVA_hg38/ref/SVA_hg38.makefile.sub
+#include library/HERV_hg38/ref/HERV_hg38.makefile.sub
+#include library/LINE2_hg38/ref/LINE2_hg38.makefile.sub
+#include library/LTR_hg38/ref/LTR_hg38.makefile.sub
+#include library/SVA_hg38/ref/SVA_hg38.makefile.sub
 
 ##
 ## Main sub-target
 ##
 #!!!!!-----ALL REs:-----!!!!! processSample: $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).L1HS_hg38.count.corrected $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).HERV_hg38.count.corrected $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).LINE2_hg38.count.corrected $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).LTR_hg38.count.corrected $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).SVA_hg38.count.corrected 
-processSample: $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).L1HS_hg38.count.corrected $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).HERV_hg38.count.corrected $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).LINE2_hg38.count.corrected $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).SVA_hg38.count.corrected $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).LTR_hg38.count.corrected
+#processSample: $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).L1HS_hg38.count.corrected $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).HERV_hg38.count.corrected $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).LINE2_hg38.count.corrected $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).SVA_hg38.count.corrected $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).LTR_hg38.count.corrected
+processSample: $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).L1HS_hg38.count.corrected
 #	## Copy Output descriptions file
 #	#cp $(SRNABENCH_LIBS)/sRNAbenchOutputDescription.txt $(OUTPUT_DIR)/$(SAMPLE_ID)/sRNAbenchOutputDescription.txt 
 #	## END PIPELINE

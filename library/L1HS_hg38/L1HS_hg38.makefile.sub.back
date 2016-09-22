@@ -1,0 +1,75 @@
+
+$(LIBRARY_PATH)/L1HS_hg38/$(NUMBER_OF_READS)_$(MEAN_READ_LEN)_$(ERROR_RATE).txt: $(LIBRARY_PATH)/L1HS_hg38/ref/L1HS_hg38.ref.fa
+ifneq ("$(wildcard $(LIBRARY_PATH)/L1HS_hg38/$(NUMBER_OF_READS)_$(MEAN_READ_LEN)_$(ERROR_RATE).txt.lock)","")
+	@echo -e "$(timestamp) $(PIPELINE_NAME): There is another simulation running. Exiting without finishing."
+	exit 1
+endif
+
+	touch $(LIBRARY_PATH)/L1HS_hg38/$(NUMBER_OF_READS)_$(MEAN_READ_LEN)_$(ERROR_RATE).txt.lock
+
+	@echo -e "======================\n" >> $(LOG_FILE)
+	@echo -e "$(timestamp) $(PIPELINE_NAME): The profile for this study was not found at: $(LIBRARY_PATH)/L1HS_hg38/$(NUMBER_OF_READS)_$(MEAN_READ_LEN)_$(ERROR_RATE).txt\n" >> $(LOG_FILE)
+	@echo -e "$(timestamp) $(PIPELINE_NAME): Simulating reads with length equal to $(MEAN_READ_LEN)\n" >> $(LOG_FILE)
+	@echo -e "$(timestamp) $(PIPELINE_NAME): Creating reads from based on L1HS_hg38 reference sequence:\n" >> $(LOG_FILE)
+	mkdir -p $(LIBRARY_PATH)/L1HS_hg38/simu/
+	@for iter in $(shell seq 1 $(NUMBER_OF_LOOPS) ); do \
+		$(WGSIM_BIN) -S $$(date "+%N") -1 $(MEAN_READ_LEN) -N $(NUMBER_OF_READS) -d0 -r$(ERROR_RATE) -e 0 -R 0 $(LIBRARY_PATH)/L1HS_hg38/ref/L1HS_hg38.ref.fa $(LIBRARY_PATH)/L1HS_hg38/simu/$(NUMBER_OF_READS)_$(MEAN_READ_LEN)_$(ERROR_RATE)_$$iter.simu /dev/null > /dev/null 2> /dev/null ; \
+    done
+	@echo -e "$(timestamp) $(PIPELINE_NAME): Aligning simulated reads to the reference genome:\n" >> $(LOG_FILE)
+	@for iter in $(shell seq 1 $(NUMBER_OF_LOOPS) ); do \
+		$(BOWTIE_BIN) -p $(N_THREADS) $(BOWTIE_PARAMS) -x $(BOWTIE_INDEX) -U $(LIBRARY_PATH)/L1HS_hg38/simu/$(NUMBER_OF_READS)_$(MEAN_READ_LEN)_$(ERROR_RATE)_$$iter.simu 2>> $(LOG_FILE) | $(SAMTOOLS_BIN) view -Sb - 2>> $(LOG_FILE) > $(LIBRARY_PATH)/L1HS_hg38/simu/$(NUMBER_OF_READS)_$(MEAN_READ_LEN)_$(ERROR_RATE)_$$iter.bam; \
+		$(SAMTOOLS_BIN) sort -@$(N_THREADS) -m 4G $(LIBRARY_PATH)/L1HS_hg38/simu/$(NUMBER_OF_READS)_$(MEAN_READ_LEN)_$(ERROR_RATE)_$$iter.bam $(LIBRARY_PATH)/L1HS_hg38/simu/$(NUMBER_OF_READS)_$(MEAN_READ_LEN)_$(ERROR_RATE)_$$iter.sorted; \
+		rm -R $(LIBRARY_PATH)/L1HS_hg38/simu/$(NUMBER_OF_READS)_$(MEAN_READ_LEN)_$(ERROR_RATE)_$$iter.bam; \
+		$(INTERSERC_BIN) -f 0.75 -a $(LIBRARY_PATH)/L1HS_hg38/simu/$(NUMBER_OF_READS)_$(MEAN_READ_LEN)_$(ERROR_RATE)_$$iter.sorted.bam -b $(LIBRARY_PATH)/L1HS_hg38/ref/L1HS_hg38.bed -sorted -bed -wo > $(LIBRARY_PATH)/L1HS_hg38/simu/$(NUMBER_OF_READS)_$(MEAN_READ_LEN)_$(ERROR_RATE)_$$iter.sorted.bam.L1HS_hg38.bed; \
+		cat $(LIBRARY_PATH)/L1HS_hg38/simu/$(NUMBER_OF_READS)_$(MEAN_READ_LEN)_$(ERROR_RATE)_$$iter.sorted.bam.L1HS_hg38.bed | awk -F "[$$\t ]" '{print $$4,$$(NF-1)}' | sed 's/_[0-9]*_[0-9]*_[0-9]*[:][0-9]*[:][0-9]*_[0-9]*[:][0-9]*[:][0-9]*[_][0-9a-z]*[/][12]//g' | sort -k1,1 -k2,2 | uniq -c > $(LIBRARY_PATH)/L1HS_hg38/simu/$(NUMBER_OF_READS)_$(MEAN_READ_LEN)_$(ERROR_RATE)_$$iter.sorted.bam.L1HS_hg38.bed.count; \
+	done
+	@echo -e "$(timestamp) $(PIPELINE_NAME): Calculating the expected number of reads on each subfamily:\n" >> $(LOG_FILE)
+	cat $(LIBRARY_PATH)/L1HS_hg38/simu/$(NUMBER_OF_READS)_$(MEAN_READ_LEN)_$(ERROR_RATE)_*.sorted.bam.L1HS_hg38.bed.count | sort -k2,2 -k3,3 | sed 's/^[ ]*//g' | awk 'BEGIN{first=1} {if ( first == 1 ) {id=$$2"*"$$3;first=0}; if ( id != $$2"*"$$3 ) {print id,sum/$(NUMBER_OF_LOOPS);id=$$2"*"$$3;sum=0;count=0}; sum+=$$1;count++}; END{print id,sum/$(NUMBER_OF_LOOPS);}' > $(LIBRARY_PATH)/L1HS_hg38/$(NUMBER_OF_READS)_$(MEAN_READ_LEN)_$(ERROR_RATE).means.txt
+	$(PYTHON_BIN) $(LIBRARY_PATH)/scripts/complete_table.py -1 $(LIBRARY_PATH)/L1HS_hg38/ref/L1HS_hg38.ref.bases -2 $(LIBRARY_PATH)/L1HS_hg38/$(NUMBER_OF_READS)_$(MEAN_READ_LEN)_$(ERROR_RATE).means.txt > $(LIBRARY_PATH)/L1HS_hg38/$(NUMBER_OF_READS)_$(MEAN_READ_LEN)_$(ERROR_RATE).txt
+
+	rm -Rf $(LIBRARY_PATH)/L1HS_hg38/$(NUMBER_OF_READS)_$(MEAN_READ_LEN)_$(ERROR_RATE).txt.lock
+
+##
+## Create auxiliary file with proportion of simulated reads on each subfamily
+##
+$(LIBRARY_PATH)/L1HS_hg38/$(NUMBER_OF_READS)_$(MEAN_READ_LEN)_$(ERROR_RATE).prop.txt: $(LIBRARY_PATH)/L1HS_hg38/$(NUMBER_OF_READS)_$(MEAN_READ_LEN)_$(ERROR_RATE).txt
+	@echo -e "======================\n" >> $(LOG_FILE)
+	@echo -e "$(timestamp) $(PIPELINE_NAME): Calculating simulation proportions:\n" >> $(LOG_FILE)
+	echo -n "L1HS_hg38_Subfamily " > $(LIBRARY_PATH)/L1HS_hg38/$(NUMBER_OF_READS)_$(MEAN_READ_LEN)_$(ERROR_RATE).prop.txt
+	$(R_BIN) --no-restore --no-save --args $(LIBRARY_PATH)/L1HS_hg38/$(NUMBER_OF_READS)_$(MEAN_READ_LEN)_$(ERROR_RATE).txt $(LIBRARY_PATH)/L1HS_hg38/$(NUMBER_OF_READS)_$(MEAN_READ_LEN)_$(ERROR_RATE).prop.txt < $(LIBRARY_PATH)/scripts/prop.template.r >> $(LOG_FILE)
+
+##
+## Create signature file
+##
+$(OUTPUT_DIR)/$(SAMPLE_ID)/L1HS_hg38.signatures.txt: $(LIBRARY_PATH)/L1HS_hg38/$(NUMBER_OF_READS)_$(MEAN_READ_LEN)_$(ERROR_RATE).prop.txt $(LIBRARY_PATH)/L1HS_hg38/ref/L1HS_hg38.ref.bases
+	@echo -e "======================\n" >> $(LOG_FILE)
+	@echo -e "$(timestamp) $(PIPELINE_NAME): Compiling L1HS_hg38 signature files:\n" >> $(LOG_FILE)
+	cat $(LIBRARY_PATH)/L1HS_hg38/ref/L1HS_hg38.ref.bases | awk '{print $$2}' > $(LIBRARY_PATH)/L1HS_hg38/ref/L1HS_hg38.bases.ref.tmp
+	paste $(LIBRARY_PATH)/L1HS_hg38/$(NUMBER_OF_READS)_$(MEAN_READ_LEN)_$(ERROR_RATE).prop.txt $(LIBRARY_PATH)/L1HS_hg38/ref/L1HS_hg38.bases.ref.tmp | sed 's/[ \t][ \t]*/ /g' > $(OUTPUT_DIR)/$(SAMPLE_ID)/L1HS_hg38.signatures.txt
+	rm -Rf $(LIBRARY_PATH)/L1HS_hg38/ref/L1HS_hg38.bases.ref.tmp
+
+
+##
+## Quantification of L1HS_hg38 repetitive element reads
+##
+$(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).L1HS_hg38.count: $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).re.filtered.bed $(LIBRARY_PATH)/L1HS_hg38/$(NUMBER_OF_READS)_$(MEAN_READ_LEN)_$(ERROR_RATE).prop.txt
+	@echo -e "======================\n" >> $(LOG_FILE)
+	@echo -e "$(timestamp) $(PIPELINE_NAME): Counting the number of reads on each L1HS_hg38 subfamily:\n" >> $(LOG_FILE)
+	echo "L1HS_hg38_count L1HS_hg38_Subfamily" > $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).L1HS_hg38.count
+	cat $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).re.filtered.bed | egrep -e "[[:blank:]]L1" | awk '{print $$(NF-1)}' | sort | uniq -c >> $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).L1HS_hg38.count
+	cat $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).L1HS_hg38.count | awk '{print $$2,$$1}' > $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).L1HS_hg38.count.t
+	mv $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).L1HS_hg38.count.t $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).L1HS_hg38.count 
+
+##
+## Correcting the number of reads mapped to L1HS_hg38
+##	
+$(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).L1HS_hg38.count.corrected: $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).L1HS_hg38.count $(OUTPUT_DIR)/$(SAMPLE_ID)/L1HS_hg38.signatures.txt $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).tpm.factor
+	@echo -e "======================\n" >> $(LOG_FILE)
+	@echo -e "$(timestamp) $(PIPELINE_NAME): Correcting the number of reads on L1HS_hg38:\n" >> $(LOG_FILE)
+	$(R_BIN) --no-restore --no-save --args $(OUTPUT_DIR)/$(SAMPLE_ID)/L1HS_hg38.signatures.txt $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).L1HS_hg38.count $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).sorted.bam.tot $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).tpm.factor < $(LIBRARY_PATH)/L1HS_hg38/ref/L1HS_hg38.ridge.R >> $(LOG_FILE)
+	@echo -e "$(timestamp) $(PIPELINE_NAME): Writing L1HS_hg38 quantification files:" >> $(LOG_FILE)
+	@echo -e "$(timestamp) $(PIPELINE_NAME): - $(OUTPUT_DIR)/$(SAMPLE_ID)/L1HS_hg38.signatures.txt $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).L1HS_hg38.count.corrected" >> $(LOG_FILE)
+	@echo -e "$(timestamp) $(PIPELINE_NAME): - $(OUTPUT_DIR)/$(SAMPLE_ID)/L1HS_hg38.signatures.txt $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).L1HS_hg38.count.rpkm" >> $(LOG_FILE)
+	@echo -e "$(timestamp) $(PIPELINE_NAME): - $(OUTPUT_DIR)/$(SAMPLE_ID)/L1HS_hg38.signatures.txt $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).L1HS_hg38.count.rpkm.corrected" >> $(LOG_FILE)
+	@echo -e "$(timestamp) $(PIPELINE_NAME): - $(OUTPUT_DIR)/$(SAMPLE_ID)/L1HS_hg38.signatures.txt $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).L1HS_hg38.count.signal_proportions" >> $(LOG_FILE)
+
