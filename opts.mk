@@ -13,16 +13,16 @@ CONFIGURED        := NULL
 INPUT_FILE_NAME := $(notdir $(INPUT_FILE_PATH))
 INPUT_FILE_ID   := $(basename $(INPUT_FILE_NAME))
 
-LIBRARY_PATH        := /data/library/
-SCRIPT_LIBRARY_PATH := ./library/
+LIBRARY_PATH        := ./library/
+EXT_LIBRARY_PATH    := /data/library/
 EXE_DIR             := /usr
 
 BOWTIE_BIN       := $(EXE_DIR)/bin/bowtie2
 BOWTIE_PARAMS    := --sensitive-local -N1 --no-unal
-BOWTIE_INDEX     := $(LIBRARY_PATH)/bowtie2/hg38
+BOWTIE_INDEX     := $(EXT_LIBRARY_PATH)/bowtie2/hg38
 
 KALLISTO_BIN     := $(EXE_DIR)/bin/kallisto
-KALLISTO_INDEX   := $(LIBRARY_PATH)/kallisto/gencode.v23.transcripts.index
+KALLISTO_INDEX   := $(EXT_LIBRARY_PATH)/kallisto/gencode.v23.transcripts.index
 
 SAMTOOLS_BIN     := $(EXE_DIR)/bin/samtools
 INTERSERC_BIN    := $(EXE_DIR)/bin/intersectBed
@@ -31,14 +31,14 @@ WGSIM_BIN        := $(EXE_DIR)/bin/wgsim
 R_BIN            := $(EXE_DIR)/bin/R
 PYTHON_BIN	 := $(EXE_DIR)/python
 
-REPEAT_MASKER_BED          := $(LIBRARY_PATH)/rep_annotation/hg38.rep.noexon.bed
-REPEAT_MASKER_TOT_BED      := $(LIBRARY_PATH)/rep_annotation/hg38.rep.bed
+REPEAT_MASKER_BED          := $(EXT_LIBRARY_PATH)/rep_annotation/hg38.rep.noexon.bed
+REPEAT_MASKER_TOT_BED      := $(EXT_LIBRARY_PATH)/rep_annotation/hg38.rep.bed
 
 QFILTER_MIN_READ_FRAC      := 80
 QFILTER_MIN_QUAL           := 20
 
-COMMAND_HOMOPOL            := perl $(SCRIPT_LIBRARY_PATH)/scripts/remove_homopol.pl
-COMMAND_PARTIAL            := perl $(SCRIPT_LIBRARY_PATH)/scripts/filter_qual.pl
+COMMAND_HOMOPOL            := perl $(LIBRARY_PATH)/scripts/remove_homopol.pl
+COMMAND_PARTIAL            := perl $(LIBRARY_PATH)/scripts/filter_qual.pl
 
 ##
 ## Simulation parameters
