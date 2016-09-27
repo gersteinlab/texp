@@ -128,11 +128,11 @@ $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).sorted.bam: $(OUTPUT_DIR)/$(SAMPLE_ID)/$
 $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).re.filtered.bed: $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).sorted.bam
 	@echo -e "======================\n" >> $(LOG_FILE)
 	@echo -e "$(timestamp) $(PIPELINE_NAME): Intersecting reads with repeat masked regions:\n" >> $(LOG_FILE)
-	$(INTERSERC_BIN) -f 0.75 -a $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).sorted.bam -b $(REPEAT_MASKER_BED) -sorted > $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).re.bam
+	$(INTERSERC_BIN) -f 0.75 -a $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).sorted.bam -b $(REPEAT_MASKER_BED) > $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).re.bam
 	@echo -e "$(timestamp) $(PIPELINE_NAME): Removing Homopolymers and Partially mapped reads:\n" >> $(LOG_FILE)
 	$(SAMTOOLS_BIN) view -h $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).re.bam | $(COMMAND_HOMOPOL) | $(COMMAND_PARTIAL) | $(SAMTOOLS_BIN) view -b - > $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).re.filtered.bam
 	@echo -e "$(timestamp) $(PIPELINE_NAME): Creating BED with reads coordinates:\n" >> $(LOG_FILE)
-	$(INTERSERC_BIN) -f 0.75 -a $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).re.filtered.bam -b $(REPEAT_MASKER_TOT_BED) -sorted -bed -wo > $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).re.filtered.bed
+	$(INTERSERC_BIN) -f 0.75 -a $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).re.filtered.bam -b $(REPEAT_MASKER_TOT_BED) -bed -wo > $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).re.filtered.bed
 
 ##
 ## Quantifying transcripts annotated by GENCODE usign Kallisto 
@@ -140,7 +140,7 @@ $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).re.filtered.bed: $(OUTPUT_DIR)/$(SAMPLE_
 $(OUTPUT_DIR)/$(SAMPLE_ID)/transcripts_quantification/abundance.txt: $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).filtered.fastq
 	@echo -e "======================\n" >> $(LOG_FILE)
 	@echo -e "$(timestamp) $(PIPELINE_NAME): Fast quantify transcripts with Kallisto:\n" >> $(LOG_FILE)
-	$(KALLISTO_BIN) quant -i $(KALLISTO_INDEX) -o $(OUTPUT_DIR)/$(SAMPLE_ID)/transcripts_quantification --single -l $(MEAN_READ_LEN)  --plaintext $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).filtered.fastq
+	$(KALLISTO_BIN) quant -i $(KALLISTO_INDEX) -o $(OUTPUT_DIR)/$(SAMPLE_ID)/transcripts_quantification --single -l $(MEAN_READ_LEN) --plaintext $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).filtered.fastq
 
 ##
 ## Transcript count factor -- for TPM quantification
