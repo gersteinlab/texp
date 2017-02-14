@@ -15,7 +15,6 @@ TeXP is a pipeline for quantifying abundances of Transposable Elements transcrip
   - Penalized package ()
  - samtools ()
  - wgsim (a12da33  on Oct 17, 2011)
- - Kallisto (v0.42.1)
  - Bedtools
  
 # Download
