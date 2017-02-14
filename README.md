@@ -22,3 +22,12 @@ TeXP is a pipeline for quantifying abundances of Transposable Elements transcrip
  $> git clone https://github.com/fabiocpn/TeXP.git
 
 # Docker image
+
+
+# Running TeXP
+ $> make -f Makefile INPUT_FILE_PATH=[FILE_NAME] OUTPUT_DIR=[OUTPUT_PATH] N_THREADS=[INT] REFERENCE_GENOME=[REFERENCE_GENOME_ID] SAMPLE_NAME=[SAMPLE_ID]
+ [FILE_NAME]: *.fastq/*.fq.gz/*.sra 
+ [OUTPUT_PATH]: i.e. process/ (Path where results will be written)
+ [N_THREADS]:  Number of threads TeXP will use
+ [REFERENCE_GENOME]: hg19|hg38
+ [SAMPLE_ID]: Sample's name.
