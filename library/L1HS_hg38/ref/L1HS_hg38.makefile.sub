@@ -64,11 +64,11 @@ $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).L1HS_hg38.count: $(OUTPUT_DIR)/$(SAMPLE_
 ##
 ## Correcting the number of reads mapped to L1HS_hg38
 ##	
-$(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).L1HS_hg38.count.corrected: $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).L1HS_hg38.count $(OUTPUT_DIR)/$(SAMPLE_ID)/L1HS_hg38.signatures.txt $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).tpm.factor
+$(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).L1HS_hg38.count.corrected: $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).L1HS_hg38.count $(OUTPUT_DIR)/$(SAMPLE_ID)/L1HS_hg38.signatures.txt
 	@echo -e "======================\n" >> $(LOG_FILE)
 	@echo -e "$(timestamp) $(PIPELINE_NAME): Correcting the number of reads on L1HS_hg38:\n" >> $(LOG_FILE)
-	$(R_BIN) --no-restore --no-save --args $(OUTPUT_DIR)/$(SAMPLE_ID)/L1HS_hg38.signatures.txt $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).L1HS_hg38.count $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).sorted.bam.tot $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).tpm.factor < $(LIBRARY_PATH)/L1HS_hg38/ref/L1HS_hg38.lasso.R >> $(LOG_FILE)
-	#$(R_BIN) --no-restore --no-save --args $(OUTPUT_DIR)/$(SAMPLE_ID)/L1HS_hg38.signatures.txt $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).L1HS_hg38.count $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).sorted.bam.tot $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).tpm.factor < $(LIBRARY_PATH)/L1HS_hg38/ref/L1HS_hg38.ridge.R >> $(LOG_FILE)
+	$(R_BIN) --no-restore --no-save --args $(OUTPUT_DIR)/$(SAMPLE_ID)/L1HS_hg38.signatures.txt $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).L1HS_hg38.count $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).sorted.bam.tot < $(LIBRARY_PATH)/L1HS_hg38/ref/L1HS_hg38.lasso.R >> $(LOG_FILE)
+	#$(R_BIN) --no-restore --no-save --args $(OUTPUT_DIR)/$(SAMPLE_ID)/L1HS_hg38.signatures.txt $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).L1HS_hg38.count $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).sorted.bam.tot < $(LIBRARY_PATH)/L1HS_hg38/ref/L1HS_hg38.ridge.R >> $(LOG_FILE)
 	@echo -e "$(timestamp) $(PIPELINE_NAME): Writing L1HS_hg38 quantification files:" >> $(LOG_FILE)
 	@echo -e "$(timestamp) $(PIPELINE_NAME): - $(OUTPUT_DIR)/$(SAMPLE_ID)/L1HS_hg38.signatures.txt $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).L1HS_hg38.count.corrected" >> $(LOG_FILE)
 	@echo -e "$(timestamp) $(PIPELINE_NAME): - $(OUTPUT_DIR)/$(SAMPLE_ID)/L1HS_hg38.signatures.txt $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).L1HS_hg38.count.rpkm" >> $(LOG_FILE)

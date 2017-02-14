@@ -134,22 +134,6 @@ $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).re.filtered.bed: $(OUTPUT_DIR)/$(SAMPLE_
 	@echo -e "$(timestamp) $(PIPELINE_NAME): Creating BED with reads coordinates:\n" >> $(LOG_FILE)
 	$(INTERSERC_BIN) -f 0.75 -a $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).re.filtered.bam -b $(REPEAT_MASKER_TOT_BED) -bed -wo > $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).re.filtered.bed
 
-##
-## Quantifying transcripts annotated by GENCODE usign Kallisto 
-##
-$(OUTPUT_DIR)/$(SAMPLE_ID)/transcripts_quantification/abundance.txt: $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).filtered.fastq
-	@echo -e "======================\n" >> $(LOG_FILE)
-	@echo -e "$(timestamp) $(PIPELINE_NAME): Fast quantify transcripts with Kallisto:\n" >> $(LOG_FILE)
-	$(KALLISTO_BIN) quant -i $(KALLISTO_INDEX) -o $(OUTPUT_DIR)/$(SAMPLE_ID)/transcripts_quantification --single -l $(MEAN_READ_LEN) --plaintext $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).filtered.fastq
-
-##
-## Transcript count factor -- for TPM quantification
-##
-$(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).tpm.factor: $(OUTPUT_DIR)/$(SAMPLE_ID)/transcripts_quantification/abundance.txt
-	@echo -e "======================\n" >> $(LOG_FILE)
-	@echo -e "$(timestamp) $(PIPELINE_NAME): Create fator file:\n" >> $(LOG_FILE)
-	cat $(OUTPUT_DIR)/$(SAMPLE_ID)/transcripts_quantification/abundance.txt | grep -v "eff_length" | awk '{a+=$$4/$$3} END{print a}' > $(OUTPUT_DIR)/$(SAMPLE_ID)/$(SAMPLE_ID).tpm.factor
-
 
 include library/L1HS_hg38/ref/L1HS_hg38.makefile.sub
 #include library/HERV_hg38/ref/HERV_hg38.makefile.sub

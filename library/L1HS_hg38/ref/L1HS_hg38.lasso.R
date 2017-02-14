@@ -5,7 +5,6 @@ args <- commandArgs(trailingOnly = TRUE)
 sig_file = args[1]
 L1HS_hg38sub_counts_file = args[2]
 total_reads_file = args[3]
-factor_tpm_file = args[4]
 #
 length = 6000
 
@@ -39,7 +38,6 @@ rownames(corrected_L1HS_hg38_reads) = colnames(A)
 colnames(corrected_L1HS_hg38_reads) = c("reads")
 
 tot = scan(total_reads_file)
-factor_tpm = scan(factor_tpm_file)
 
 ##
 ## Quantify element transcription
@@ -54,12 +52,6 @@ colnames(rpkm)=c("RPKM")
 rpkm.corrected = data.frame((corrected_L1HS_hg38_reads*10^9)/(length*tot))
 colnames(rpkm.corrected)=c("RPKM")
 
-tpm = data.frame((L1HS_hg38_reads/length)*(1/factor_tpm)*10^6)
-colnames(tpm)=c("TPM")
-
-tpm.corrected = data.frame((corrected_L1HS_hg38_reads/length)*(1/factor_tpm)*10^6)
-colnames(tpm.corrected)=c("TPM")
-
 ##
 ## Dump results into file
 ##
@@ -67,8 +59,6 @@ write.table(percentages,file=paste(L1HS_hg38sub_counts_file,"signal_proportions"
 
 write.table(rpkm,file=paste(L1HS_hg38sub_counts_file,"rpkm",sep="."),quote=F)
 write.table(rpkm.corrected,file=paste(L1HS_hg38sub_counts_file,"rpkm.corrected",sep="."),quote=F)
-write.table(tpm,file=paste(L1HS_hg38sub_counts_file,"tpm",sep="."),quote=F)
-write.table(tpm.corrected,file=paste(L1HS_hg38sub_counts_file,"tpm.corrected",sep="."),quote=F)
 
 write.table(corrected_L1HS_hg38_reads.back,file=paste(L1HS_hg38sub_counts_file,"corrected",sep="."))
 } else {

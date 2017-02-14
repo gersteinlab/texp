@@ -21,9 +21,6 @@ BOWTIE_BIN       := $(EXE_DIR)/bin/bowtie2
 BOWTIE_PARAMS    := --sensitive-local -N1 --no-unal
 BOWTIE_INDEX     := $(EXT_LIBRARY_PATH)/bowtie2/hg38
 
-KALLISTO_BIN     := $(EXE_DIR)/bin/kallisto
-KALLISTO_INDEX   := $(EXT_LIBRARY_PATH)/kallisto/gencode.v23.transcripts.index
-
 SAMTOOLS_BIN     := $(EXE_DIR)/bin/samtools
 INTERSERC_BIN    := $(EXE_DIR)/bin/intersectBed
 FASTX_FILTER_EXE := $(EXE_DIR)/bin/fastq_quality_filter
