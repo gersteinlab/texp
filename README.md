@@ -7,32 +7,32 @@ TeXP is a pipeline for quantifying abundances of Transposable Elements transcrip
 [[REF]]
 
 # Requirements
- - Bowtie2 ()
- - Fastx-toolkit ()
- - perl ()
- - python ()
- - R ()
-  - Penalized package ()
- - samtools ()
- - wgsim (a12da33  on Oct 17, 2011)
- - Bedtools
+ - Bowtie2 (2.3+)
+ - Bedtools (2.26+)
+ - Fastx-toolkit (0.0.14+)
+ - perl (5.24+)
+ - python (2.7)
+ - R (3.3+)
+  - Penalized package (0.49+)
+ - samtools (1.3+)
+ - wgsim (a12da33 on Oct 17, 2011)
  
 # Download
  $> git clone https://github.com/fabiocpn/TeXP.git
 
 # Docker image
+docker pull fnavarro/texp
+https://hub.docker.com/r/fnavarro/texp/ for futher instructions
 
 
 # Running TeXP
- $> make -f Makefile INPUT_FILE_PATH=[FILE_NAME] OUTPUT_DIR=[OUTPUT_PATH] N_THREADS=[INT] REFERENCE_GENOME=[REFERENCE_GENOME_ID] SAMPLE_NAME=[SAMPLE_ID]
+ $> make -f Makefile INPUT_FILE_PATH=[FILE_NAME] OUTPUT_DIR=[OUTPUT_PATH] N_THREADS=[INT] SAMPLE_NAME=[SAMPLE_ID]
 
  [FILE_NAME]: *.fastq/*.fq.gz/*.sra 
 
  [OUTPUT_PATH]: i.e. process/ (Path where results will be written)
 
  [N_THREADS]:  Number of threads TeXP will use
-
- [REFERENCE_GENOME]: hg19|hg38
 
  [SAMPLE_ID]: Sample's name.
 
