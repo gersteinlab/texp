@@ -20,20 +20,17 @@ TeXP is a pipeline for quantifying abundances of Transposable Elements transcrip
 # Download
  $> git clone https://github.com/fabiocpn/TeXP.git
 
+ Edit TeXP.sh and Update INSTALL_DIR variable to the path where TeXP was cloned 
+
 # Docker image
 docker pull fnavarro/texp
 https://hub.docker.com/r/fnavarro/texp/ for futher instructions
 
 
 # Running TeXP
- $> make -f Makefile INPUT_FILE_PATH=[FILE_NAME] OUTPUT_DIR=[OUTPUT_PATH] N_THREADS=[INT] SAMPLE_NAME=[SAMPLE_ID]
+ $> ./TeXP.sh -f=[FILE_NAME] -t=[INT] -o=[OUTPUT_PATH] n=[SAMPLE_ID]
 
- [FILE_NAME]: *.fastq/*.fq.gz/*.sra 
-
- [OUTPUT_PATH]: i.e. process/ (Path where results will be written)
-
- [N_THREADS]:  Number of threads TeXP will use
-
- [SAMPLE_ID]: Sample's name.
-
-
+ -f: Input file (fastq,fastq.gz,sra)
+ -t: Number of threads
+ -o: Output path (i.e. ./ or ./processed)
+ -n: Sample name (i.e. SAMPLE01)
