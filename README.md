@@ -32,9 +32,9 @@ https://hub.docker.com/r/fnavarro/texp/ for futher instructions
 # TeXP config
  A few paramaters must be set in order to work outside the docker enviroment; Parameters are set on opts.mk
 
- LIBRARY_PATH: Should be pointing to TeXP library
- EXT_LIBRARY_PATH: Path containing the bowtie2 reference index and Transposable element annotation bed file
- EXE_DIR: Path to binaries
+ - LIBRARY_PATH: Should be pointing to TeXP library
+ - EXT_LIBRARY_PATH: Path containing the bowtie2 reference index and Transposable element annotation bed file
+ - EXE_DIR: Path to binaries
 
 
 # Running TeXP
