@@ -21,7 +21,7 @@ TeXP is a pipeline for quantifying abundances of Transposable Elements transcrip
  - Hg38 repetitive element annotation (http://homes.gersteinlab.org/people/fn64/TeXP/rep_annotation.hg38.tar.bz2)
  
 # Download
- $> git clone https://github.com/fabiocpn/TeXP.git
+ $> git clone https://github.com/gersteinlab/texp.git
 
  Edit TeXP.sh and Update INSTALL_DIR variable to the path where TeXP was cloned 
 
