@@ -47,20 +47,20 @@ RUN	ln -s /src/TeXP/TeXP.sh /usr/bin/TeXP; ln -s /src/TeXP/TeXP.sh /usr/bin/TeXP
 
 RUN mkdir -p /data/library/rep_annotation; \
 	cd /data/library/rep_annotation; \
-	wget -c -t0 "http://homes.gersteinlab.org/people/fn64/TeXP/rep_annotation.hg38.tar.bz2" -O rep_annotation.hg38.tar.bz2; \
+	wget --quiet -c -t0 "http://homes.gersteinlab.org/people/fn64/TeXP/rep_annotation.hg38.tar.bz2" -O rep_annotation.hg38.tar.bz2; \
 	tar xjvf rep_annotation.hg38.tar.bz2; \
 	rm -Rf rep_annotation.hg38.tar.bz2
 	
 # DEPRECATED: 2017-02-14 - Only L1 subfamilies RPKM are estimated in the latest version		
 #RUN mkdir -p /data/library/kallisto; \
 #	cd /data/library/; \
-#	wget -c -t0 "https://www.dropbox.com/s/bd0vqqyedx7p0jv/kallisto_gencode23.hg38.tar.bz2?dl=1" -O kallisto_gencode23.hg38.tar.bz2; \
+#	wget --quiet -c -t0 "https://www.dropbox.com/s/bd0vqqyedx7p0jv/kallisto_gencode23.hg38.tar.bz2?dl=1" -O kallisto_gencode23.hg38.tar.bz2; \
 #	tar xjvf kallisto_gencode23.hg38.tar.bz2; \
 #	rm -Rf kallisto_gencode23.hg38.tar.bz2
 
 RUN mkdir -p /data/library/bowtie2; \
 	cd /data/library/bowtie2; \
-	wget -c -t0 "http://homes.gersteinlab.org/people/fn64/TeXP/bowtie2.hg38.tar.bz2" -O bowtie2.hg38.tar.bz2; \
+	wget --quiet -c -t0 "http://homes.gersteinlab.org/people/fn64/TeXP/bowtie2.hg38.tar.bz2" -O bowtie2.hg38.tar.bz2; \
 	tar xjvf bowtie2.hg38.tar.bz2; \
 	rm -Rf bowtie2.hg38.tar.bz2
 
@@ -69,7 +69,7 @@ RUN mkdir -p /data/library/bowtie2; \
 #Install R packages dependencies
 ################
 #RUN cd /data/library/; \
-#	wget -c -t0 "https://cloud.r-project.org/src/contrib/Archive/penalized/penalized_0.9-49.tar.gz" -O penalized_0.9-49.tar.gz; \
+#	wget --quiet -c -t0 "https://cloud.r-project.org/src/contrib/Archive/penalized/penalized_0.9-49.tar.gz" -O penalized_0.9-49.tar.gz; \
 #	R CMD INSTALL penalized_0.9-49.tar.gz
 
 RUN echo 'install.packages(c("penalized"), repos="http://cloud.r-project.org", dependencies=TRUE)' > /tmp/packages.R \
