@@ -37,7 +37,7 @@ RUN	mkdir -p /src; \
 
 RUN	mkdir -p /src; \ 
 	cd /src ; \
-	git clone https://github.com/fabiocpn/TeXP.git
+	git clone https://github.com/gersteinlab/texp.git
 RUN	ln -s /src/TeXP/TeXP.sh /usr/bin/TeXP; ln -s /src/TeXP/TeXP.sh /usr/bin/TeXP.sh
 
 
