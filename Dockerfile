@@ -11,7 +11,7 @@ RUN apt-get install -y \
 	fastx-toolkit=0.0.14-3 \
 	gawk=1:4.1.4+dfsg-1 \
 	git \
-	perl=5.24.1-3+deb9u1 \
+	perl \
 	python=2.7.13-2 \
 	r-base=3.3.3-1 \
 	r-base-dev=3.3.3-1 \
