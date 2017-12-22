@@ -38,7 +38,7 @@ RUN	mkdir -p /src; \
 RUN	mkdir -p /src; \ 
 	cd /src ; \
 	git clone https://github.com/gersteinlab/texp.git
-RUN	ln -s /src/TeXP/TeXP.sh /usr/bin/TeXP; ln -s /src/TeXP/TeXP.sh /usr/bin/TeXP.sh
+RUN	ln -s /src/texp/TeXP.sh /usr/bin/TeXP; ln -s /src/texp/TeXP.sh /usr/bin/TeXP.sh; 
 
 
 ################
@@ -78,6 +78,6 @@ RUN echo 'install.packages(c("penalized"), repos="http://cloud.r-project.org", d
 
 #make -f Makefile INPUT_FILE_PATH=/data/ENCFF000EBE.fastq.gz OUTPUT_DIR=/data/process/ N_THREADS=4 SAMPLE_NAME="t"
 
-WORKDIR /src/TeXP/
-CMD ["/src/TeXP/TeXP.sh"] 
+WORKDIR /src/texp/
+CMD ["/src/texp/TeXP.sh"] 
 

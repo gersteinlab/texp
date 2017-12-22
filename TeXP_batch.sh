@@ -1,5 +1,5 @@
 #!/bin/bash
-INSTALL_DIR="/src/TeXP"
+INSTALL_DIR="/src/texp"
 
 usage() { printf "\nUsage: $0 [-f input.fastq] [-t <interger>] [-o <output_path>] [-n <string>]\n\n -f: Input file (fastq,fastq.gz,sra)\n -t: Number of threads\n -o: Output path (i.e. ./ or ./processed)\n -n: Sample name (i.e. SAMPLE01)\n" 1>&2; exit 1; }
 
