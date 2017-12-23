@@ -74,7 +74,10 @@ ADD	https://api.github.com/repos/gersteinlab/texp/git/refs/heads/master version.
 RUN	mkdir -p /src; \ 
 	cd /src ; \
 	git clone https://github.com/gersteinlab/texp.git
-RUN	ln -s /src/texp/TeXP.sh /usr/bin/TeXP; ln -s /src/texp/TeXP.sh /usr/bin/TeXP.sh; 
+RUN	chmod +x /src/texp/TeXP.sh /src/texp/TeXP_batch.sh; \
+	ln -s /src/texp/TeXP.sh /usr/bin/TeXP; \
+	ln -s /src/texp/TeXP.sh /usr/bin/TeXP.sh; \
+	ls -s /src/texp/TeXP_batch.sh /usr/bin/TeXP_batch;
 
 
 WORKDIR /src/texp/
