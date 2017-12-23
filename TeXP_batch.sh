@@ -43,6 +43,6 @@ fi
 
 tar xvf $input_file -C ./ > packedfiles;
 for r_input_file in $(cat packedfiles); do
-	echo make -f $INSTALL_DIR/Makefile INPUT_FILE_PATH=$r_input_file OUTPUT_DIR=$output_dir N_THREADS=$threads SAMPLE_NAME=$output_name;
+	make -f $INSTALL_DIR/Makefile INPUT_FILE_PATH=$r_input_file OUTPUT_DIR=$output_dir N_THREADS=$threads SAMPLE_NAME=$r_input_file;
 done
 
