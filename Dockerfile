@@ -77,7 +77,7 @@ RUN	mkdir -p /src; \
 RUN	chmod +x /src/texp/TeXP.sh /src/texp/TeXP_batch.sh; \
 	ln -s /src/texp/TeXP.sh /usr/bin/TeXP; \
 	ln -s /src/texp/TeXP.sh /usr/bin/TeXP.sh; \
-	ls -s /src/texp/TeXP_batch.sh /usr/bin/TeXP_batch;
+	ln -s /src/texp/TeXP_batch.sh /usr/bin/TeXP_batch;
 
 
 WORKDIR /src/texp/
