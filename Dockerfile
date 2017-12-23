@@ -31,15 +31,6 @@ RUN	mkdir -p /src; \
 	mv wgsim /usr/bin/; \
 	cd /;
 
-################
-#Install TeXP
-################
-
-RUN	mkdir -p /src; \ 
-	cd /src ; \
-	git clone https://github.com/gersteinlab/texp.git
-RUN	ln -s /src/texp/TeXP.sh /usr/bin/TeXP; ln -s /src/texp/TeXP.sh /usr/bin/TeXP.sh; 
-
 
 ################
 #Download Libraries
@@ -75,8 +66,16 @@ RUN mkdir -p /data/library/bowtie2; \
 RUN echo 'install.packages(c("penalized"), repos="http://cloud.r-project.org", dependencies=TRUE)' > /tmp/packages.R \
     && Rscript /tmp/packages.R
 
+################
+#Install TeXP
+################
 
-#make -f Makefile INPUT_FILE_PATH=/data/ENCFF000EBE.fastq.gz OUTPUT_DIR=/data/process/ N_THREADS=4 SAMPLE_NAME="t"
+ADD	https://api.github.com/repos/gersteinlab/texp/git/refs/heads/master version.json
+RUN	mkdir -p /src; \ 
+	cd /src ; \
+	git clone https://github.com/gersteinlab/texp.git
+RUN	ln -s /src/texp/TeXP.sh /usr/bin/TeXP; ln -s /src/texp/TeXP.sh /usr/bin/TeXP.sh; 
+
 
 WORKDIR /src/texp/
 CMD ["/src/texp/TeXP.sh"] 
