@@ -13,7 +13,7 @@ CONFIGURED        := NULL
 INPUT_FILE_NAME := $(notdir $(INPUT_FILE_PATH))
 INPUT_FILE_ID   := $(basename $(INPUT_FILE_NAME))
 
-LIBRARY_PATH        := ./library/
+LIBRARY_PATH        := /src/texp/library/
 EXT_LIBRARY_PATH    := /data/library/
 EXE_DIR             := /usr
 
@@ -26,7 +26,7 @@ INTERSERC_BIN    := $(EXE_DIR)/bin/intersectBed
 FASTX_FILTER_EXE := $(EXE_DIR)/bin/fastq_quality_filter
 WGSIM_BIN        := $(EXE_DIR)/bin/wgsim
 R_BIN            := $(EXE_DIR)/bin/R
-PYTHON_BIN	 := $(EXE_DIR)/python
+PYTHON_BIN	     := $(EXE_DIR)/bin/python
 
 REPEAT_MASKER_BED          := $(EXT_LIBRARY_PATH)/rep_annotation/hg38.rep.noexon.bed
 REPEAT_MASKER_TOT_BED      := $(EXT_LIBRARY_PATH)/rep_annotation/hg38.rep.bed
