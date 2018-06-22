@@ -20,36 +20,11 @@ TeXP is a pipeline for quantifying abundances of Transposable Elements transcrip
  - Bowtie2 hg38 reference index (http://homes.gersteinlab.org/people/fn64/TeXP/rep_annotation.hg38.tar.bz2)
  - Hg38 repetitive element annotation (http://homes.gersteinlab.org/people/fn64/TeXP/rep_annotation.hg38.tar.bz2)
  
-# Download
+# Download TeXP
  $> git clone https://github.com/gersteinlab/texp.git
 
  Edit TeXP.sh and Update INSTALL_DIR variable to the path where TeXP was cloned 
 
-# Docker image
-docker pull fnavarro/texp
-https://hub.docker.com/r/fnavarro/texp/ for futher instructions
-
-# TeXP config
- A few paramaters must be set in order to work outside the docker enviroment; Parameters are set on opts.mk
-
- - LIBRARY_PATH: Should be pointing to TeXP library
- - EXT_LIBRARY_PATH: Path containing the bowtie2 reference index and Transposable element annotation bed file
- - EXE_DIR: Path to binaries
-
-
-# Running TeXP
- $> ./TeXP.sh -f=[FILE_NAME] -t=[INT] -o=[OUTPUT_PATH] n=[SAMPLE_ID]
-
- -f: Input file (fastq,fastq.gz,sra)
-
- -t: Number of threads
-
- -o: Output path (i.e. ./ or ./processed)
-
- -n: Sample name (i.e. SAMPLE01)
- 
- ---
- 
  # Installing TeXP dependencies
 apt-get update
 
@@ -103,3 +78,36 @@ mkdir -p /data/library/bowtie2; \
 echo 'install.packages(c("penalized"), repos="http://cloud.r-project.org", dependencies=TRUE)' > /tmp/packages.R \
     && Rscript /tmp/packages.R
 
+
+# TeXP config
+ A few paramaters must be setup so TeXP can properly work outside a docker enviroment; Parameters are set on opts.mk and the user MUST properly set it up.
+
+ - LIBRARY_PATH: Absolute path pointing to TeXP library, general this is the path you downloaded TeXP
+ - EXT_LIBRARY_PATH: Absolute path containing the bowtie2 reference index and Transposable element annotation bed file, downloaded as instructed above
+ - EXE_DIR: If binaries are found in a single path, EXE_DIR can be used to generalize binary location. For example, if bowtie2, bedtools, etc are located at /usr/bin/, you should set EXE_DIR := /usr
+ - Dependencies installed in different paths should be defined manually, for example, if wgsim is installed at the home folder, the user must set:
+    - WGSIM_BIN := ~/wgsim/bin/wgsim
+  - Finally the user must set to CONFIGURED := TRUE
+
+---
+
+
+# Docker image
+Alternatively, docker images containing all dependencies and libraries can be used. The TeXP docker image also is pre-configured to work outside the box.
+Check https://hub.docker.com/r/fnavarro/texp/ for futher instructions:
+docker pull fnavarro/texp
+
+
+---
+# Running TeXP
+ $> ./TeXP.sh -f=[FILE_NAME] -t=[INT] -o=[OUTPUT_PATH] n=[SAMPLE_ID]
+
+ -f: Input file (fastq,fastq.gz,sra)
+
+ -t: Number of threads
+
+ -o: Output path (i.e. ./ or ./processed)
+
+ -n: Sample name (i.e. SAMPLE01)
+ 
+ ---
