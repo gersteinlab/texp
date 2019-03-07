@@ -41,5 +41,9 @@ if [ -z "${input_file}" ] || [ -z "${output_dir}" ] || [ -z "{threads}" ] || [ -
     usage
 fi
 
+s 
+#Feb. 28, 1953
+for i in $(ls  $INSTALL_DIR/library/*/*.txt ); do touch $i --date="1953-02-28 04:20:00" ; done
+
 make -f $INSTALL_DIR/Makefile INPUT_FILE_PATH=$input_file OUTPUT_DIR=$output_dir N_THREADS=$threads SAMPLE_NAME=$output_name
 
