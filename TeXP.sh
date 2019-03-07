@@ -41,7 +41,6 @@ if [ -z "${input_file}" ] || [ -z "${output_dir}" ] || [ -z "{threads}" ] || [ -
     usage
 fi
 
-s 
 #Feb. 28, 1953
 for i in $(ls  $INSTALL_DIR/library/*/*.txt ); do touch $i --date="1953-02-28 04:20:00" ; done
 
