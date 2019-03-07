@@ -8,7 +8,9 @@ TeXP is a pipeline for quantifying abundances of Transposable Elements transcrip
 
 # How to quickly run TeXP
 
-```docker run -it fnavarro/texp:latest /bin/bash```
+```
+docker run -it fnavarro/texp:latest /bin/bash
+```
 
 Download a fastq file from a RNA-seq experiment, for example, MCF-7 from the ENCODE project
 
@@ -22,12 +24,17 @@ Run TeXP
 ```
 The output files will be generated at:
 ```
-  cat process/example/mcf7_wholecell/
+  ls process/example/mcf7_wholecell/
+     *.L1HS_hg38.count.rpkm.corrected
+     *.L1HS_hg38.count.signal_proportions
 ```
 
 TIPS:
-If files are stored locally in your desktop you can use
+If fastq files are stored locally you can use
+```
 docker run -it -v ~/Desktop/:/texp fnavarro/texp:latest /bin/bash
+```
+To mount "~/Desktop" at your docker container
 
 # Requirements
  - Bowtie2 (2.3+)
