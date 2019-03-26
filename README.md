@@ -15,18 +15,21 @@ docker run -it fnavarro/texp:latest /bin/bash
 Download a fastq file from a RNA-seq experiment, for example, MCF-7 from the ENCODE project
 
 ```  
-  wget -c -t0 "https://www.encodeproject.org/files/ENCFF000JXT/@@download/ENCFF000JXT.fastq.gz" -O file.fastq.gz
+  wget -c -t0 "ihttps://www.encodeproject.org/files/ENCFF000HFF/@@download/ENCFF000HFF.fastq.gz" -O file.fastq.gz
 ```
   
 Run TeXP
 ```
-  ./TeXP.sh -f file.fastq.gz -t 1 -o process/example/ -n mcf7_wholecell
+  ./TeXP.sh -f file.fastq.gz -t 1 -o process/example/ -n quick_texp_run
 ```
 The output files will be generated at:
 ```
-  ls process/example/mcf7_wholecell/
-     *.L1HS_hg38.count.rpkm.corrected
-     *.L1HS_hg38.count.signal_proportions
+  ls process/example/quick_texp_run
+	*.L1HS_hg38.count (Naive counts) 
+	*.L1HS_hg38.count.corrected (Corrected counts)
+	*.L1HS_hg38.count.rpkm (Naive RPKM)
+	*.L1HS_hg38.count.rpkm.corrected (Corrected RPKM)
+	*.L1HS_hg38.count.signal_proportions 
 ```
 
 TIPS:
