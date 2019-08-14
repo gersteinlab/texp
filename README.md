@@ -4,7 +4,7 @@ TeXP is a pipeline to evaluate the transcription level of transposable elements 
 #About
 TeXP is a pipeline for quantifying abundances of Transposable Elements transcripts from RNA-Seq data. TeXP is based on the assumption that RNA-seq reads overlapping Transposable Elements is a composition of pervasive transcription signal and autonomous transcription of Transposable Elements.
 
-[[REF]]
+https://www.biorxiv.org/content/10.1101/648667v1.full
 
 # How to quickly run TeXP
 
@@ -15,7 +15,7 @@ docker run -it fnavarro/texp:latest /bin/bash
 Download a fastq file from a RNA-seq experiment, for example, MCF-7 from the ENCODE project
 
 ```  
-  wget -c -t0 "ihttps://www.encodeproject.org/files/ENCFF000HFF/@@download/ENCFF000HFF.fastq.gz" -O file.fastq.gz
+  wget -c -t0 "https://www.encodeproject.org/files/ENCFF000HFF/@@download/ENCFF000HFF.fastq.gz" -O file.fastq.gz
 ```
   
 Run TeXP
@@ -50,8 +50,8 @@ To mount "~/Desktop" at your docker container
  - samtools (1.3+)
  - wgsim (a12da33 on Oct 17, 2011)
 ---
- - Bowtie2 hg38 reference index (http://homes.gersteinlab.org/people/fn64/TeXP/rep_annotation.hg38.tar.bz2)
- - Hg38 repetitive element annotation (http://homes.gersteinlab.org/people/fn64/TeXP/rep_annotation.hg38.tar.bz2)
+ - Bowtie2 hg38 reference index (https://www.dropbox.com/s/r6ai07g7vf17cjr/rep_annotation.hg38.tar.bz2?dl=1)
+ - Hg38 repetitive element annotation (https://www.dropbox.com/s/r6ai07g7vf17cjr/rep_annotation.hg38.tar.bz2?dl=1)
  
 # Download TeXP
  $> git clone https://github.com/gersteinlab/texp.git
@@ -94,13 +94,13 @@ Fix path (/data/library) to the a proper location at your computation enviroment
 
 mkdir -p /data/library/rep_annotation; \
 	cd /data/library/rep_annotation; \
-	wget -c -t0 "http://homes.gersteinlab.org/people/fn64/TeXP/rep_annotation.hg38.tar.bz2" -O rep_annotation.hg38.tar.bz2; \
+	wget -c -t0 "https://www.dropbox.com/s/r6ai07g7vf17cjr/rep_annotation.hg38.tar.bz2?dl=1" -O rep_annotation.hg38.tar.bz2; \
 	tar xjvf rep_annotation.hg38.tar.bz2; \
 	rm -Rf rep_annotation.hg38.tar.bz2
 	
 mkdir -p /data/library/bowtie2; \
 	cd /data/library/bowtie2; \
-	wget -c -t0 "http://homes.gersteinlab.org/people/fn64/TeXP/bowtie2.hg38.tar.bz2" -O bowtie2.hg38.tar.bz2; \
+	wget -c -t0 "https://www.dropbox.com/s/r6ai07g7vf17cjr/rep_annotation.hg38.tar.bz2?dl=1" -O bowtie2.hg38.tar.bz2; \
 	tar xjvf bowtie2.hg38.tar.bz2; \
 	rm -Rf bowtie2.hg38.tar.bz2
 
