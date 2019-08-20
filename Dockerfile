@@ -38,7 +38,7 @@ RUN	mkdir -p /src; \
 
 RUN mkdir -p /data/library/rep_annotation; \
 	cd /data/library/rep_annotation; \
-	wget --quiet -c -t0 "http://homes.gersteinlab.org/people/fn64/TeXP/rep_annotation.hg38.tar.bz2" -O rep_annotation.hg38.tar.bz2; \
+	wget --quiet -c -t0 "http://files2.gersteinlab.org/public-docs/2019/08.14/rep_annotation.hg38.tar.bz2" -O rep_annotation.hg38.tar.bz2; \
 	tar xjvf rep_annotation.hg38.tar.bz2; \
 	rm -Rf rep_annotation.hg38.tar.bz2
 	
@@ -51,7 +51,7 @@ RUN mkdir -p /data/library/rep_annotation; \
 
 RUN mkdir -p /data/library/bowtie2; \
 	cd /data/library/bowtie2; \
-	wget --quiet -c -t0 "http://homes.gersteinlab.org/people/fn64/TeXP/bowtie2.hg38.tar.bz2" -O bowtie2.hg38.tar.bz2; \
+	wget --quiet -c -t0 "http://files2.gersteinlab.org/public-docs/2019/08.14/bowtie2.hg38.tar.bz2" -O bowtie2.hg38.tar.bz2; \
 	tar xjvf bowtie2.hg38.tar.bz2; \
 	rm -Rf bowtie2.hg38.tar.bz2
 
