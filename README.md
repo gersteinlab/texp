@@ -50,8 +50,8 @@ To mount "~/Desktop" at your docker container
  - samtools (1.3+)
  - wgsim (a12da33 on Oct 17, 2011)
 ---
- - Bowtie2 hg38 reference index (https://www.dropbox.com/s/r6ai07g7vf17cjr/rep_annotation.hg38.tar.bz2?dl=1)
- - Hg38 repetitive element annotation (https://www.dropbox.com/s/r6ai07g7vf17cjr/rep_annotation.hg38.tar.bz2?dl=1)
+ - Bowtie2 hg38 reference index (http://files2.gersteinlab.org/public-docs/2019/08.14/bowtie2.hg38.tar.bz2)
+ - Hg38 repetitive element annotation (http://files2.gersteinlab.org/public-docs/2019/08.14/rep_annotation.hg38.tar.bz2)
  
 # Download TeXP
  $> git clone https://github.com/gersteinlab/texp.git
@@ -94,13 +94,13 @@ Fix path (/data/library) to the a proper location at your computation enviroment
 
 mkdir -p /data/library/rep_annotation; \
 	cd /data/library/rep_annotation; \
-	wget -c -t0 "https://www.dropbox.com/s/r6ai07g7vf17cjr/rep_annotation.hg38.tar.bz2?dl=1" -O rep_annotation.hg38.tar.bz2; \
+	wget -c -t0 "http://files2.gersteinlab.org/public-docs/2019/08.14/rep_annotation.hg38.tar.bz2" -O rep_annotation.hg38.tar.bz2; \
 	tar xjvf rep_annotation.hg38.tar.bz2; \
 	rm -Rf rep_annotation.hg38.tar.bz2
 	
 mkdir -p /data/library/bowtie2; \
 	cd /data/library/bowtie2; \
-	wget -c -t0 "https://www.dropbox.com/s/r6ai07g7vf17cjr/rep_annotation.hg38.tar.bz2?dl=1" -O bowtie2.hg38.tar.bz2; \
+	wget -c -t0 "http://files2.gersteinlab.org/public-docs/2019/08.14/bowtie2.hg38.tar.bz2" -O bowtie2.hg38.tar.bz2; \
 	tar xjvf bowtie2.hg38.tar.bz2; \
 	rm -Rf bowtie2.hg38.tar.bz2
 
