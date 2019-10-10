@@ -134,6 +134,7 @@ docker pull fnavarro/texp
 ---
 # Running TeXP
  $> ./TeXP.sh -f [FILE_NAME] -t [INT] -o [OUTPUT_PATH] n [SAMPLE_ID]
+ 
 
  -f: Input file (fastq,fastq.gz,sra)
 
@@ -144,3 +145,13 @@ docker pull fnavarro/texp
  -n: Sample name (i.e. SAMPLE01)
  
  ---
+
+ # FAQ - Frequently Asked Questions
+ > 1) Does TeXP work for paired end data?
+
+TeXP has been implemented to run one fastq file at a time. Overall, we empirically find that if the RNA-seq library is good, P1 and P2 should yeild very similar estimates. Therefore, if using paired-end RNA-seq data, we recommend calculating the mean between both pairs.
+ 
+ > 2) Does TeXP work for unstranded data?
+ Yes!
+ 
+ > 3) 
