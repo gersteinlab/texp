@@ -149,9 +149,12 @@ docker pull fnavarro/texp
  # FAQ - Frequently Asked Questions
  > 1) Does TeXP work for paired end data?
 
-TeXP has been implemented to run one fastq file at a time. Overall, we empirically find that if the RNA-seq library is good, P1 and P2 should yeild very similar estimates. Therefore, if using paired-end RNA-seq data, we recommend calculating the mean between both pairs.
+TeXP has been implemented to run one fastq file at a time. Overall, we empirically find that if the RNA-seq library is good, P1 and P2 should yield very similar estimates. Therefore, if using paired-end RNA-seq data, we recommend calculating the mean between both pairs.
  
  > 2) Does TeXP work for unstranded data?
- Yes!
  
- > 3) 
+ Yes!
+
+> 3) Can I use other aligners
+
+On (figure 15) [https://journals.plos.org/ploscompbiol/article/file?type=supplementary&id=info:doi/10.1371/journal.pcbi.1007293.s015] we show that aligners do not drastically change TeXP estimations, therefore, while you could use other aligners, we suggest using bowtie2 since all TeXP parameterization has been done on bowtie2
